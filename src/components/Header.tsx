@@ -5,9 +5,6 @@ export function Header() {
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
           Disc Golf Advisor
         </h1>
-        <p className="text-slate-200 text-sm md:text-base">
-         
-        </p>
       </div>
     </header>
   );
