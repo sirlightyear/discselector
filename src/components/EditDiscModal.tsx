@@ -107,7 +107,7 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-800 mb-2">Officielle Tal</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-2">De officielle tal</h3>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
@@ -216,9 +216,9 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
           </div>
 
           <div className="border-t border-slate-200 pt-4">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">Personlige Tal (Valgfrit)</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">Som DU føler disc'en (Valgfrit)</h3>
             <p className="text-xs text-slate-600 mb-3">
-              Efterhånden som du lærer din disc at kende, kan du indtaste dine egne tal. Beregneren vil bruge disse i stedet for de officielle.
+              Efterhånden som du lærer din disc at kende, kan du indtaste de tal du føler passer. Disse vil blive brugt i beregninger og visualiseringer i stedet for de officielle.
             </p>
             <div className="grid grid-cols-4 gap-3">
               <div>

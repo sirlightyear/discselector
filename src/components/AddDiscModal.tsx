@@ -97,6 +97,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
             </span>
           </div>
 
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800 mb-2">De officielle tal</h3>
+          </div>
+
           <div className="grid grid-cols-4 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
