@@ -1,5 +1,6 @@
+import { Plus, Trash2, Edit2, Briefcase, ChevronRight, Copy, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Briefcase, ChevronRight, Copy } from 'lucide-react';
+//import { Plus, Trash2, Edit2, Briefcase, ChevronRight, Copy } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Bag, BagInsert } from '../lib/database.types';
