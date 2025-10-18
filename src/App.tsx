@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { LoginPage } from './pages/LoginPage';
 import { CalculatorPage } from './pages/CalculatorPage';
-import { MyBagPage } from './pages/MyBagPage';
+import { CollectionPage } from './pages/CollectionPage';
+import { BagsPage } from './pages/BagsPage';
 import { Navigation } from './components/Navigation';
 
 function AppContent() {
   const { user, isLoading } = useUser();
-  const [currentPage, setCurrentPage] = useState<'calculator' | 'bag'>('calculator');
+  const [currentPage, setCurrentPage] = useState<'calculator' | 'collection' | 'bags'>('calculator');
 
   if (isLoading) {
     return (
@@ -24,7 +25,9 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
-      {currentPage === 'calculator' ? <CalculatorPage /> : <MyBagPage />}
+      {currentPage === 'calculator' && <CalculatorPage />}
+      {currentPage === 'collection' && <CollectionPage />}
+      {currentPage === 'bags' && <BagsPage />}
     </div>
   );
 }

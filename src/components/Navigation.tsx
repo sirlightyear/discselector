@@ -1,9 +1,9 @@
-import { Calculator, Package, LogOut } from 'lucide-react';
+import { Calculator, Package, Briefcase, LogOut } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface NavigationProps {
-  currentPage: 'calculator' | 'bag';
-  onNavigate: (page: 'calculator' | 'bag') => void;
+  currentPage: 'calculator' | 'collection' | 'bags';
+  onNavigate: (page: 'calculator' | 'collection' | 'bags') => void;
 }
 
 export function Navigation({ currentPage, onNavigate }: NavigationProps) {
@@ -26,15 +26,26 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               Beregner
             </button>
             <button
-              onClick={() => onNavigate('bag')}
+              onClick={() => onNavigate('collection')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                currentPage === 'bag'
+                currentPage === 'collection'
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
               <Package className="w-5 h-5" />
-              Min Bag
+              Samling
+            </button>
+            <button
+              onClick={() => onNavigate('bags')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 'bags'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <Briefcase className="w-5 h-5" />
+              Bags
             </button>
           </div>
 
