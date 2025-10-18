@@ -19,6 +19,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [isGlow, setIsGlow] = useState(false);
   const [color, setColor] = useState('#3b82f6');
   const [visualDescription, setVisualDescription] = useState('');
+  const [personalSpeed, setPersonalSpeed] = useState<number | ''>('');
+  const [personalGlide, setPersonalGlide] = useState<number | ''>('');
+  const [personalTurn, setPersonalTurn] = useState<number | ''>('');
+  const [personalFade, setPersonalFade] = useState<number | ''>('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,6 +49,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         is_glow: isGlow,
         color: color || null,
         visual_description: visualDescription.trim() || null,
+        personal_speed: personalSpeed === '' ? null : Number(personalSpeed),
+        personal_glide: personalGlide === '' ? null : Number(personalGlide),
+        personal_turn: personalTurn === '' ? null : Number(personalTurn),
+        personal_fade: personalFade === '' ? null : Number(personalFade),
       });
     } catch (err) {
       setError('Kunne ikke tilføje disc. Prøv igen.');
@@ -203,6 +211,77 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               >
                 Begge
               </button>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-4">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">Som DU føler disc'en (Valgfrit)</h3>
+            <p className="text-xs text-slate-600 mb-3">
+              Hvis du allerede kender disc'en, kan du indtaste de tal du føler passer. Disse vil blive brugt i beregninger og visualiseringer i stedet for de officielle.
+            </p>
+            <div className="grid grid-cols-4 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Speed
+                </label>
+                <input
+                  type="number"
+                  value={personalSpeed}
+                  onChange={(e) => setPersonalSpeed(e.target.value === '' ? '' : Number(e.target.value))}
+                  min={1}
+                  max={14}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
+                  placeholder={speed.toString()}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Glide
+                </label>
+                <input
+                  type="number"
+                  value={personalGlide}
+                  onChange={(e) => setPersonalGlide(e.target.value === '' ? '' : Number(e.target.value))}
+                  min={1}
+                  max={7}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
+                  placeholder={glide.toString()}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Turn
+                </label>
+                <input
+                  type="number"
+                  value={personalTurn}
+                  onChange={(e) => setPersonalTurn(e.target.value === '' ? '' : Number(e.target.value))}
+                  min={-5}
+                  max={5}
+                  step={0.5}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
+                  placeholder={turn.toString()}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Fade
+                </label>
+                <input
+                  type="number"
+                  value={personalFade}
+                  onChange={(e) => setPersonalFade(e.target.value === '' ? '' : Number(e.target.value))}
+                  min={0}
+                  max={5}
+                  step={0.5}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
+                  placeholder={fade.toString()}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 
