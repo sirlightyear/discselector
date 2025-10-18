@@ -157,13 +157,32 @@ export function MyBagPage() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-800 mb-1">
-                      {disc.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      {disc.color && (
+                        <div
+                          className="w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"
+                          style={{ backgroundColor: disc.color }}
+                          title={disc.visual_description || 'Disc farve'}
+                        />
+                      )}
+                      <h3 className="text-lg font-bold text-slate-800">
+                        {disc.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
                         {disc.throw_type}
                       </span>
+                      {disc.weight && (
+                        <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                          {disc.weight}g
+                        </span>
+                      )}
+                      {disc.is_glow && (
+                        <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+                          Glow
+                        </span>
+                      )}
                       <div
                         className={`w-3 h-3 rounded-full ${getStabilityColor(
                           disc.turn,
@@ -172,6 +191,11 @@ export function MyBagPage() {
                         title="Stabilitet"
                       />
                     </div>
+                    {disc.visual_description && (
+                      <p className="text-xs text-slate-500 mb-2">
+                        {disc.visual_description}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -191,31 +215,38 @@ export function MyBagPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                  <div className="bg-slate-50 rounded px-2 py-1 text-center">
-                    <div className="text-xs text-slate-600">Speed</div>
-                    <div className="text-base font-bold text-slate-800">
-                      {disc.speed}
+                <div className="space-y-2 mb-3">
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-slate-50 rounded px-2 py-1 text-center">
+                      <div className="text-xs text-slate-600">Speed</div>
+                      <div className="text-base font-bold text-slate-800">
+                        {disc.personal_speed ?? disc.speed}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 rounded px-2 py-1 text-center">
+                      <div className="text-xs text-slate-600">Glide</div>
+                      <div className="text-base font-bold text-slate-800">
+                        {disc.personal_glide ?? disc.glide}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 rounded px-2 py-1 text-center">
+                      <div className="text-xs text-slate-600">Turn</div>
+                      <div className="text-base font-bold text-slate-800">
+                        {disc.personal_turn ?? disc.turn}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 rounded px-2 py-1 text-center">
+                      <div className="text-xs text-slate-600">Fade</div>
+                      <div className="text-base font-bold text-slate-800">
+                        {disc.personal_fade ?? disc.fade}
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-slate-50 rounded px-2 py-1 text-center">
-                    <div className="text-xs text-slate-600">Glide</div>
-                    <div className="text-base font-bold text-slate-800">
-                      {disc.glide}
+                  {(disc.personal_speed || disc.personal_glide || disc.personal_turn || disc.personal_fade) && (
+                    <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded text-center">
+                      Viser personlige tal
                     </div>
-                  </div>
-                  <div className="bg-slate-50 rounded px-2 py-1 text-center">
-                    <div className="text-xs text-slate-600">Turn</div>
-                    <div className="text-base font-bold text-slate-800">
-                      {disc.turn}
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded px-2 py-1 text-center">
-                    <div className="text-xs text-slate-600">Fade</div>
-                    <div className="text-base font-bold text-slate-800">
-                      {disc.fade}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {disc.note && (

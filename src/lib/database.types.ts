@@ -43,7 +43,8 @@ export interface Database {
           personal_glide: number | null
           personal_turn: number | null
           personal_fade: number | null
-          photo_url: string | null
+          color: string | null
+          visual_description: string | null
           created_at: string
         }
         Insert: {
@@ -62,7 +63,8 @@ export interface Database {
           personal_glide?: number | null
           personal_turn?: number | null
           personal_fade?: number | null
-          photo_url?: string | null
+          color?: string | null
+          visual_description?: string | null
           created_at?: string
         }
         Update: {
@@ -81,7 +83,8 @@ export interface Database {
           personal_glide?: number | null
           personal_turn?: number | null
           personal_fade?: number | null
-          photo_url?: string | null
+          color?: string | null
+          visual_description?: string | null
           created_at?: string
         }
       }

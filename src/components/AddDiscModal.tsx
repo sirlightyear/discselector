@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { DiscInsert } from '../lib/database.types';
 
 interface AddDiscModalProps {
@@ -15,6 +15,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [fade, setFade] = useState(1);
   const [throwType, setThrowType] = useState<'forhånd' | 'baghånd' | 'begge'>('begge');
   const [note, setNote] = useState('');
+  const [weight, setWeight] = useState<number | ''>('');
+  const [isGlow, setIsGlow] = useState(false);
+  const [color, setColor] = useState('#3b82f6');
+  const [visualDescription, setVisualDescription] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,6 +41,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         fade,
         throw_type: throwType,
         note: note.trim() || null,
+        weight: weight === '' ? null : Number(weight),
+        is_glow: isGlow,
+        color: color || null,
+        visual_description: visualDescription.trim() || null,
       });
     } catch (err) {
       setError('Kunne ikke tilføje disc. Prøv igen.');
@@ -72,6 +80,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               placeholder="f.eks. Destroyer"
               disabled={isSubmitting}
             />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2 text-sm text-blue-800">
+            <ExternalLink className="w-4 h-4 flex-shrink-0" />
+            <span>
+              Kender du ikke tallene? Slå dem op på{' '}
+              <a
+                href="https://discgolfdata.com/pages/yadd.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline hover:text-blue-900"
+              >
+                Disc Golf Data
+              </a>
+            </span>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
@@ -177,6 +200,63 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 Begge
               </button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Vægt (gram)
+              </label>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
+                min={150}
+                max={180}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 175"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Farve
+              </label>
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-full h-[42px] rounded-lg border border-slate-300 cursor-pointer"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isGlow}
+                onChange={(e) => setIsGlow(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20"
+                disabled={isSubmitting}
+              />
+              <span className="text-sm font-medium text-slate-700">Glow disc</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Visuel beskrivelse (valgfrit)
+            </label>
+            <input
+              type="text"
+              value={visualDescription}
+              onChange={(e) => setVisualDescription(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              placeholder="f.eks. Rød med hvide swirls"
+              disabled={isSubmitting}
+            />
           </div>
 
           <div>
