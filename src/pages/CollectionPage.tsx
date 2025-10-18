@@ -177,7 +177,7 @@ export function CollectionPage() {
                 <h1 className="text-2xl font-bold text-slate-800">Min Disc-samling</h1>
                 {user?.initialer && (
                   <p className="text-sm text-slate-600">
-                    {user.user_id} ({user.initialer})
+                   test {user.user_id} ({user.initialer})
                   </p>
                 )}
               </div>
