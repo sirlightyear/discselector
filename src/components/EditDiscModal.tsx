@@ -24,6 +24,11 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
   const [personalGlide, setPersonalGlide] = useState<number | ''>(disc.personal_glide ?? '');
   const [personalTurn, setPersonalTurn] = useState<number | ''>(disc.personal_turn ?? '');
   const [personalFade, setPersonalFade] = useState<number | ''>(disc.personal_fade ?? '');
+  const [isTransparent, setIsTransparent] = useState(disc.is_transparent);
+  const [discType, setDiscType] = useState<'Putter' | 'Midrange' | 'Fairway Driver' | 'Distance Driver' | null>(disc.disc_type);
+  const [plastic, setPlastic] = useState(disc.plastic || '');
+  const [manufacturer, setManufacturer] = useState(disc.manufacturer || '');
+  const [purchaseYear, setPurchaseYear] = useState<number | ''>(disc.purchase_year ?? '');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,6 +59,11 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
         personal_glide: personalGlide === '' ? null : Number(personalGlide),
         personal_turn: personalTurn === '' ? null : Number(personalTurn),
         personal_fade: personalFade === '' ? null : Number(personalFade),
+        is_transparent: isTransparent,
+        disc_type: discType,
+        plastic: plastic.trim() || null,
+        manufacturer: manufacturer.trim() || null,
+        purchase_year: purchaseYear === '' ? null : Number(purchaseYear),
       });
     } catch (err) {
       setError('Kunne ikke opdatere disc. Prøv igen.');
@@ -96,14 +106,47 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
             <span>
               Opdater officielle tal fra{' '}
               <a
-                href="https://discgolfdata.com/pages/yadd.html"
+                href="https://www.discdb.info/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline hover:text-blue-900"
               >
-                Disc Golf Data
+                DiscDB
               </a>
             </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Disc type
+              </label>
+              <select
+                value={discType || ''}
+                onChange={(e) => setDiscType(e.target.value as any || null)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                disabled={isSubmitting}
+              >
+                <option value="">Vælg type</option>
+                <option value="Putter">Putter</option>
+                <option value="Midrange">Midrange</option>
+                <option value="Fairway Driver">Fairway Driver</option>
+                <option value="Distance Driver">Distance Driver</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Producent (valgfrit)
+              </label>
+              <input
+                type="text"
+                value={manufacturer}
+                onChange={(e) => setManufacturer(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. Innova"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           <div>
@@ -216,7 +259,24 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
           </div>
 
           <div className="border-t border-slate-200 pt-4">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">Som DU føler disc'en (Valgfrit)</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800">Som DU føler disc'en (Valgfrit)</h3>
+              {(personalSpeed !== '' || personalGlide !== '' || personalTurn !== '' || personalFade !== '') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPersonalSpeed('');
+                    setPersonalGlide('');
+                    setPersonalTurn('');
+                    setPersonalFade('');
+                  }}
+                  className="text-xs text-slate-600 hover:text-slate-800 underline"
+                  disabled={isSubmitting}
+                >
+                  Nulstil personlige tal
+                </button>
+              )}
+            </div>
             <p className="text-xs text-slate-600 mb-3">
               Efterhånden som du lærer din disc at kende, kan du indtaste de tal du føler passer. Disse vil blive brugt i beregninger og visualiseringer i stedet for de officielle.
             </p>
@@ -289,6 +349,37 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
+                Plastik (valgfrit)
+              </label>
+              <input
+                type="text"
+                value={plastic}
+                onChange={(e) => setPlastic(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. Star"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Købsår (valgfrit)
+              </label>
+              <input
+                type="number"
+                value={purchaseYear}
+                onChange={(e) => setPurchaseYear(e.target.value === '' ? '' : Number(e.target.value))}
+                min={1970}
+                max={2100}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 2024"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Vægt (gram)
               </label>
               <input
@@ -316,7 +407,7 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
             </div>
           </div>
 
-          <div>
+          <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -326,6 +417,16 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
                 disabled={isSubmitting}
               />
               <span className="text-sm font-medium text-slate-700">Glow disc</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTransparent}
+                onChange={(e) => setIsTransparent(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20"
+                disabled={isSubmitting}
+              />
+              <span className="text-sm font-medium text-slate-700">Gennemsigtig</span>
             </label>
           </div>
 

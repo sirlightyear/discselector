@@ -9,10 +9,10 @@ interface AddDiscModalProps {
 
 export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [name, setName] = useState('');
-  const [speed, setSpeed] = useState(5);
-  const [glide, setGlide] = useState(4);
-  const [turn, setTurn] = useState(0);
-  const [fade, setFade] = useState(1);
+  const [speed, setSpeed] = useState<number | ''>(5);
+  const [glide, setGlide] = useState<number | ''>(4);
+  const [turn, setTurn] = useState<number | ''>(0);
+  const [fade, setFade] = useState<number | ''>(1);
   const [throwType, setThrowType] = useState<'forhånd' | 'baghånd' | 'begge'>('begge');
   const [note, setNote] = useState('');
   const [weight, setWeight] = useState<number | ''>('');
@@ -23,6 +23,11 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [personalGlide, setPersonalGlide] = useState<number | ''>('');
   const [personalTurn, setPersonalTurn] = useState<number | ''>('');
   const [personalFade, setPersonalFade] = useState<number | ''>('');
+  const [isTransparent, setIsTransparent] = useState(false);
+  const [discType, setDiscType] = useState<'Putter' | 'Midrange' | 'Fairway Driver' | 'Distance Driver' | null>(null);
+  const [plastic, setPlastic] = useState('');
+  const [manufacturer, setManufacturer] = useState('');
+  const [purchaseYear, setPurchaseYear] = useState<number | ''>('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,14 +40,19 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
       return;
     }
 
+    if (speed === '' || glide === '' || turn === '' || fade === '') {
+      setError('Indtast venligst officielle flight numbers (Speed, Glide, Turn, Fade)');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await onAdd({
         name: name.trim(),
-        speed,
-        glide,
-        turn,
-        fade,
+        speed: Number(speed),
+        glide: Number(glide),
+        turn: Number(turn),
+        fade: Number(fade),
         throw_type: throwType,
         note: note.trim() || null,
         weight: weight === '' ? null : Number(weight),
@@ -53,6 +63,11 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         personal_glide: personalGlide === '' ? null : Number(personalGlide),
         personal_turn: personalTurn === '' ? null : Number(personalTurn),
         personal_fade: personalFade === '' ? null : Number(personalFade),
+        is_transparent: isTransparent,
+        disc_type: discType,
+        plastic: plastic.trim() || null,
+        manufacturer: manufacturer.trim() || null,
+        purchase_year: purchaseYear === '' ? null : Number(purchaseYear),
       });
     } catch (err) {
       setError('Kunne ikke tilføje disc. Prøv igen.');
@@ -95,14 +110,47 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
             <span>
               Kender du ikke tallene? Slå dem op på{' '}
               <a
-                href="https://discgolfdata.com/pages/yadd.html"
+                href="https://www.discdb.info/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline hover:text-blue-900"
               >
-                Disc Golf Data
+                DiscDB
               </a>
             </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Disc type
+              </label>
+              <select
+                value={discType || ''}
+                onChange={(e) => setDiscType(e.target.value as any || null)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                disabled={isSubmitting}
+              >
+                <option value="">Vælg type</option>
+                <option value="Putter">Putter</option>
+                <option value="Midrange">Midrange</option>
+                <option value="Fairway Driver">Fairway Driver</option>
+                <option value="Distance Driver">Distance Driver</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Producent (valgfrit)
+              </label>
+              <input
+                type="text"
+                value={manufacturer}
+                onChange={(e) => setManufacturer(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. Innova"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           <div>
@@ -117,10 +165,11 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               <input
                 type="number"
                 value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
+                onChange={(e) => setSpeed(e.target.value === '' ? '' : Number(e.target.value))}
                 min={1}
                 max={14}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 9"
                 disabled={isSubmitting}
               />
             </div>
@@ -131,10 +180,11 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               <input
                 type="number"
                 value={glide}
-                onChange={(e) => setGlide(Number(e.target.value))}
+                onChange={(e) => setGlide(e.target.value === '' ? '' : Number(e.target.value))}
                 min={1}
                 max={7}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 5"
                 disabled={isSubmitting}
               />
             </div>
@@ -145,11 +195,12 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               <input
                 type="number"
                 value={turn}
-                onChange={(e) => setTurn(Number(e.target.value))}
+                onChange={(e) => setTurn(e.target.value === '' ? '' : Number(e.target.value))}
                 min={-5}
                 max={5}
                 step={0.5}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. -1"
                 disabled={isSubmitting}
               />
             </div>
@@ -160,11 +211,12 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               <input
                 type="number"
                 value={fade}
-                onChange={(e) => setFade(Number(e.target.value))}
+                onChange={(e) => setFade(e.target.value === '' ? '' : Number(e.target.value))}
                 min={0}
                 max={5}
                 step={0.5}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 3"
                 disabled={isSubmitting}
               />
             </div>
@@ -215,7 +267,24 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
           </div>
 
           <div className="border-t border-slate-200 pt-4">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">Som DU føler disc'en (Valgfrit)</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800">Som DU føler disc'en (Valgfrit)</h3>
+              {(personalSpeed !== '' || personalGlide !== '' || personalTurn !== '' || personalFade !== '') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPersonalSpeed('');
+                    setPersonalGlide('');
+                    setPersonalTurn('');
+                    setPersonalFade('');
+                  }}
+                  className="text-xs text-slate-600 hover:text-slate-800 underline"
+                  disabled={isSubmitting}
+                >
+                  Nulstil personlige tal
+                </button>
+              )}
+            </div>
             <p className="text-xs text-slate-600 mb-3">
               Hvis du allerede kender disc'en, kan du indtaste de tal du føler passer. Disse vil blive brugt i beregninger og visualiseringer i stedet for de officielle.
             </p>
@@ -288,6 +357,37 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
+                Plastik (valgfrit)
+              </label>
+              <input
+                type="text"
+                value={plastic}
+                onChange={(e) => setPlastic(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. Star"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Købsår (valgfrit)
+              </label>
+              <input
+                type="number"
+                value={purchaseYear}
+                onChange={(e) => setPurchaseYear(e.target.value === '' ? '' : Number(e.target.value))}
+                min={1970}
+                max={2100}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="f.eks. 2024"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Vægt (gram)
               </label>
               <input
@@ -315,7 +415,7 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
             </div>
           </div>
 
-          <div>
+          <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -325,6 +425,16 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 disabled={isSubmitting}
               />
               <span className="text-sm font-medium text-slate-700">Glow disc</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTransparent}
+                onChange={(e) => setIsTransparent(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20"
+                disabled={isSubmitting}
+              />
+              <span className="text-sm font-medium text-slate-700">Gennemsigtig</span>
             </label>
           </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Briefcase, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Edit2, Briefcase, ChevronRight, Copy } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Bag, BagInsert } from '../lib/database.types';
@@ -95,6 +95,49 @@ export function BagsPage() {
     }
   };
 
+  const handleDuplicateBag = async (bag: Bag) => {
+    if (!user) return;
+
+    try {
+      const { data: newBag, error: bagError } = await supabase
+        .from('bags')
+        .insert({
+          user_id: user.user_id,
+          name: `${bag.name} (kopi)`,
+          description: bag.description
+        })
+        .select()
+        .single();
+
+      if (bagError) throw bagError;
+
+      const { data: bagDiscs, error: bagDiscsError } = await supabase
+        .from('bag_discs')
+        .select('disc_id, position')
+        .eq('bag_id', bag.bag_id);
+
+      if (bagDiscsError) throw bagDiscsError;
+
+      if (bagDiscs && bagDiscs.length > 0) {
+        const newBagDiscs = bagDiscs.map(bd => ({
+          bag_id: newBag.bag_id,
+          disc_id: bd.disc_id,
+          position: bd.position
+        }));
+
+        const { error: insertError } = await supabase
+          .from('bag_discs')
+          .insert(newBagDiscs);
+
+        if (insertError) throw insertError;
+      }
+
+      await loadBags();
+    } catch (error) {
+      console.error('Error duplicating bag:', error);
+    }
+  };
+
   if (selectedBag) {
     return <BagBuilderPage bag={selectedBag} onBack={() => setSelectedBag(null)} />;
   }
@@ -170,6 +213,13 @@ export function BagsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDuplicateBag(bag)}
+                      className="text-slate-600 hover:text-green-600 transition-colors"
+                      title="Kopier bag"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setEditingBag(bag)}
                       className="text-slate-600 hover:text-blue-600 transition-colors"

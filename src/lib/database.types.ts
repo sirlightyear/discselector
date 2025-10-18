@@ -39,6 +39,11 @@ export interface Database {
           note: string | null
           weight: number | null
           is_glow: boolean
+          is_transparent: boolean
+          disc_type: 'Putter' | 'Midrange' | 'Fairway Driver' | 'Distance Driver' | null
+          plastic: string | null
+          manufacturer: string | null
+          purchase_year: number | null
           personal_speed: number | null
           personal_glide: number | null
           personal_turn: number | null
@@ -59,6 +64,11 @@ export interface Database {
           note?: string | null
           weight?: number | null
           is_glow?: boolean
+          is_transparent?: boolean
+          disc_type?: 'Putter' | 'Midrange' | 'Fairway Driver' | 'Distance Driver' | null
+          plastic?: string | null
+          manufacturer?: string | null
+          purchase_year?: number | null
           personal_speed?: number | null
           personal_glide?: number | null
           personal_turn?: number | null
@@ -79,6 +89,11 @@ export interface Database {
           note?: string | null
           weight?: number | null
           is_glow?: boolean
+          is_transparent?: boolean
+          disc_type?: 'Putter' | 'Midrange' | 'Fairway Driver' | 'Distance Driver' | null
+          plastic?: string | null
+          manufacturer?: string | null
+          purchase_year?: number | null
           personal_speed?: number | null
           personal_glide?: number | null
           personal_turn?: number | null

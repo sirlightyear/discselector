@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Package } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Edit2, Package, ShoppingBag, Search } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
-import { Disc, DiscInsert } from '../lib/database.types';
+import { Disc, DiscInsert, Bag } from '../lib/database.types';
 import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
 
+type DiscWithBags = Disc & { bags: Bag[] };
+type SortOption = 'name' | 'type' | 'newest' | 'most_used';
+
 export function CollectionPage() {
   const { user } = useUser();
-  const [discs, setDiscs] = useState<Disc[]>([]);
+  const [discs, setDiscs] = useState<DiscWithBags[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDisc, setEditingDisc] = useState<Disc | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
     if (user) {
@@ -24,14 +29,36 @@ export function CollectionPage() {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+
+      const { data: discsData, error: discsError } = await supabase
         .from('discs')
         .select('*')
         .eq('user_id', user.user_id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setDiscs(data || []);
+      if (discsError) throw discsError;
+
+      const { data: bagDiscsData, error: bagDiscsError } = await supabase
+        .from('bag_discs')
+        .select(`
+          disc_id,
+          bags:bag_id (
+            bag_id,
+            name
+          )
+        `);
+
+      if (bagDiscsError) throw bagDiscsError;
+
+      const discWithBags: DiscWithBags[] = (discsData || []).map(disc => {
+        const discBags = bagDiscsData
+          ?.filter(bd => bd.disc_id === disc.disc_id)
+          .map(bd => bd.bags as any)
+          .filter(Boolean) || [];
+        return { ...disc, bags: discBags };
+      });
+
+      setDiscs(discWithBags);
     } catch (error) {
       console.error('Error loading discs:', error);
     } finally {
@@ -97,6 +124,40 @@ export function CollectionPage() {
     return 'bg-red-500';
   };
 
+  const filteredAndSortedDiscs = useMemo(() => {
+    let filtered = discs;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = discs.filter(disc =>
+        disc.name.toLowerCase().includes(query) ||
+        disc.manufacturer?.toLowerCase().includes(query) ||
+        disc.plastic?.toLowerCase().includes(query) ||
+        disc.disc_type?.toLowerCase().includes(query) ||
+        disc.note?.toLowerCase().includes(query)
+      );
+    }
+
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'type':
+          const typeOrder = ['Putter', 'Midrange', 'Fairway Driver', 'Distance Driver'];
+          const aTypeIndex = a.disc_type ? typeOrder.indexOf(a.disc_type) : 999;
+          const bTypeIndex = b.disc_type ? typeOrder.indexOf(b.disc_type) : 999;
+          return aTypeIndex - bTypeIndex;
+        case 'most_used':
+          return b.bags.length - a.bags.length;
+        case 'newest':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+    return sorted;
+  }, [discs, searchQuery, sortBy]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
@@ -129,6 +190,31 @@ export function CollectionPage() {
               Tilføj disc
             </button>
           </div>
+
+          {discs.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Søg efter navn, producent, plastik..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
+              >
+                <option value="newest">Nyeste først</option>
+                <option value="name">Navn (A-Å)</option>
+                <option value="type">Type</option>
+                <option value="most_used">Mest brugt</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {discs.length === 0 ? (
@@ -148,9 +234,25 @@ export function CollectionPage() {
               Tilføj disc
             </button>
           </div>
+        ) : filteredAndSortedDiscs.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">
+              Ingen discs matcher søgningen
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Prøv at søge efter noget andet
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ryd søgning
+            </button>
+          </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {discs.map((disc) => (
+            {filteredAndSortedDiscs.map((disc) => (
               <div
                 key={disc.disc_id}
                 className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
@@ -250,9 +352,23 @@ export function CollectionPage() {
                 </div>
 
                 {disc.note && (
-                  <p className="text-sm text-slate-600 italic">
+                  <p className="text-sm text-slate-600 italic mb-3">
                     {disc.note}
                   </p>
+                )}
+
+                {disc.bags.length > 0 && (
+                  <div className="border-t border-slate-100 pt-3 mt-3">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>
+                        I {disc.bags.length} bag{disc.bags.length !== 1 ? 's' : ''}:{' '}
+                        <span className="font-medium text-slate-700">
+                          {disc.bags.map(bag => bag.name).join(', ')}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
