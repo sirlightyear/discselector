@@ -18,11 +18,11 @@ export function BagCoverageChart({ discs }: BagCoverageChartProps) {
   ];
 
   const stabilityCategories = [
-    { label: 'Meget understabil', min: -Infinity, max: -1, color: 'bg-green-500' },
-    { label: 'Understabil', min: -1, max: -0.4, color: 'bg-lime-500' },
-    { label: 'Neutral', min: -0.4, max: 0.4, color: 'bg-yellow-500' },
-    { label: 'Overstabil', min: 0.4, max: 1, color: 'bg-orange-500' },
-    { label: 'Meget overstabil', min: 1, max: Infinity, color: 'bg-red-500' },
+    { label: 'Meget understabil', min: -Infinity, max: -1.5, color: 'bg-green-500' },
+    { label: 'Understabil', min: -1.5, max: -0.5, color: 'bg-lime-500' },
+    { label: 'Neutral', min: -0.5, max: 0.5, color: 'bg-yellow-500' },
+    { label: 'Overstabil', min: 0.5, max: 1.5, color: 'bg-orange-500' },
+    { label: 'Meget overstabil', min: 1.5, max: Infinity, color: 'bg-red-500' },
   ];
 
   const getStabilityScore = (disc: Disc) => {
@@ -43,7 +43,7 @@ export function BagCoverageChart({ discs }: BagCoverageChartProps) {
     ...cat,
     count: discs.filter(d => {
       const score = getStabilityScore(d);
-      return score >= cat.min && score < cat.max;
+      return score > cat.min && score <= cat.max;
     }).length
   }));
 

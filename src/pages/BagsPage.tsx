@@ -5,9 +5,11 @@ import { supabase } from '../lib/supabase';
 import { Bag, BagInsert } from '../lib/database.types';
 import { BagBuilderPage } from './BagBuilderPage';
 
+type BagWithCount = Bag & { discCount: number };
+
 export function BagsPage() {
   const { user } = useUser();
-  const [bags, setBags] = useState<Bag[]>([]);
+  const [bags, setBags] = useState<BagWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBag, setEditingBag] = useState<Bag | null>(null);
@@ -24,14 +26,26 @@ export function BagsPage() {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data: bagsData, error: bagsError } = await supabase
         .from('bags')
         .select('*')
         .eq('user_id', user.user_id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setBags(data || []);
+      if (bagsError) throw bagsError;
+
+      const { data: bagDiscsData, error: bagDiscsError } = await supabase
+        .from('bag_discs')
+        .select('bag_id');
+
+      if (bagDiscsError) throw bagDiscsError;
+
+      const bagsWithCounts: BagWithCount[] = (bagsData || []).map(bag => {
+        const discCount = bagDiscsData?.filter(bd => bd.bag_id === bag.bag_id).length || 0;
+        return { ...bag, discCount };
+      });
+
+      setBags(bagsWithCounts);
     } catch (error) {
       console.error('Error loading bags:', error);
     } finally {
@@ -196,23 +210,29 @@ export function BagsPage() {
             {bags.map((bag) => (
               <div
                 key={bag.bag_id}
-                className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all group cursor-pointer"
+                onClick={() => setSelectedBag(bag)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-800 mb-1">
-                      {bag.name}
-                    </h3>
-                    {bag.description && (
-                      <p className="text-sm text-slate-600 mb-3">
-                        {bag.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                      <span>Oprettet {new Date(bag.created_at).toLocaleDateString('da-DK')}</span>
+                <div className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+                        {bag.name}
+                      </h3>
+                      {bag.description && (
+                        <p className="text-sm text-slate-600 mb-3">
+                          {bag.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-sm text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Package className="w-4 h-4" />
+                          {bag.discCount} disc{bag.discCount !== 1 ? 's' : ''}
+                        </span>
+                        <span>Oprettet {new Date(bag.created_at).toLocaleDateString('da-DK')}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleDuplicateBag(bag)}
                       className="text-slate-600 hover:text-green-600 transition-colors"
@@ -234,14 +254,8 @@ export function BagsPage() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => setSelectedBag(bag)}
-                      className="text-slate-600 hover:text-blue-600 transition-colors"
-                      title="Åbn bag"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
                   </div>
+                </div>
                 </div>
               </div>
             ))}

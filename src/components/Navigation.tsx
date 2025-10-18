@@ -52,8 +52,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
           <div className="flex items-center gap-3">
             {user && (
               <>
-                <div className="text-sm text-slate-600">
-                  {user.initialer || user.user_id}
+                <div className="text-sm font-medium text-slate-700">
+                  {user.user_id}
                 </div>
                 <button
                   onClick={logout}

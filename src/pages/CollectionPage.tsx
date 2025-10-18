@@ -174,12 +174,10 @@ export function CollectionPage() {
             <div className="flex items-center gap-3">
               <Package className="w-6 h-6 text-blue-600" />
               <div>
-                <h1 className="text-2xl font-bold text-slate-800">Min Disc-samling</h1>
-                {user?.initialer && (
-                  <p className="text-sm text-slate-600">
-                   {user.user_id} ({user.initialer})
-                  </p>
-                )}
+                <h1 className="text-2xl font-bold text-slate-800">Min Samling</h1>
+                <p className="text-sm text-slate-600">
+                  {discs.length} disc{discs.length !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
             <button
