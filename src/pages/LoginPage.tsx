@@ -45,7 +45,7 @@ export function LoginPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">
-            Disc Golf Vælger
+            Disc Golf Vælger og bags
           </h1>
           <p className="text-slate-600 text-center mb-8">
             Indtast dit bruger-ID for at komme i gang
@@ -109,7 +109,7 @@ export function LoginPage() {
 
           <div className="mt-6 pt-6 border-t border-slate-200">
             <p className="text-sm text-slate-600 text-center">
-              Ingen kodeord krævet. Dit bruger-ID oprettes automatisk hvis det ikke findes.
+              Ingen kodeord krævet - kun dine initialer. Dit bruger-ID oprettes automatisk hvis det ikke findes.
             </p>
           </div>
         </div>
