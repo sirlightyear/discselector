@@ -27,7 +27,7 @@ export function LoginPage() {
     try {
       await login(userId.trim(), initialer.trim() || undefined);
     } catch (err) {
-      setError('Kunne ikke logge ind. Prøv igen.');
+      setError('Kunne ikke logge ind. Prøv igen. Husk at der er forskel på store og små bogstaver i brugernavnet.');
       console.error(err);
     } finally {
       setIsLoading(false);
