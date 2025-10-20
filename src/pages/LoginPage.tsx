@@ -45,7 +45,7 @@ export function LoginPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">
-            Disc Golf Vælger og bags
+            Disc Caddy
           </h1>
           <p className="text-slate-600 text-center mb-8">
             Indtast dit bruger-ID for at komme i gang
