@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, User } from 'lucide-react';
 import { LineShape } from '../types';
 import { Point, analyzeLine } from '../utils/lineDetection';
 
@@ -35,8 +35,37 @@ export function LineSection({ shape, curv, onLineChange }: LineSectionProps) {
         ctx.lineTo(points[i].x, points[i].y);
       }
       ctx.stroke();
+    } else if (shape !== 'straight' || points.length === 0) {
+      drawPresetLine(ctx, canvas.width, canvas.height, shape);
     }
-  }, [points]);
+  }, [points, shape]);
+
+  const drawPresetLine = (ctx: CanvasRenderingContext2D, width: number, height: number, lineShape: LineShape) => {
+    if (points.length > 0) return;
+
+    const startX = 50;
+    const endX = width - 50;
+    const midY = height / 2;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+
+    if (lineShape === 'straight') {
+      ctx.moveTo(startX, midY);
+      ctx.lineTo(endX, midY);
+    } else if (lineShape === 'left') {
+      ctx.moveTo(startX, midY);
+      ctx.quadraticCurveTo(width / 2, midY - 80, endX, midY);
+    } else if (lineShape === 'right') {
+      ctx.moveTo(startX, midY);
+      ctx.quadraticCurveTo(width / 2, midY + 80, endX, midY);
+    }
+
+    ctx.stroke();
+    ctx.setLineDash([]);
+  };
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -129,6 +158,10 @@ export function LineSection({ shape, curv, onLineChange }: LineSectionProps) {
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
           />
+          <div className="absolute bottom-2 left-8 flex items-center gap-1 text-slate-500">
+            <User className="w-4 h-4" />
+            <span className="text-xs font-medium">Start her</span>
+          </div>
         </div>
         <div className="mt-2 flex justify-between items-center">
           <span className="text-sm font-medium text-slate-700">

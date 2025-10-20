@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 export function LoginPage() {
@@ -39,9 +39,7 @@ export function LoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-slate-700 to-slate-600 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
-            </div>
+            <img src="/caddy.png" alt="Disc Caddy" className="w-24 h-24" />
           </div>
 
           <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">

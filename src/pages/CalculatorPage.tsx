@@ -29,7 +29,6 @@ export function CalculatorPage() {
 
   const [coefficients, setCoefficients] = useState(() => loadCoefficients());
   const [skipProfile] = useState(() => shouldSkipProfileUI(parseURLState()));
-  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (!state.bh && !state.fh) {
@@ -73,32 +72,6 @@ export function CalculatorPage() {
     coefficients,
   ]);
 
-  const handleCopyLink = async () => {
-    const url = buildURL(state);
-    try {
-      await navigator.clipboard.writeText(url);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy link:', err);
-    }
-  };
-
-  const handleReset = () => {
-    setState({
-      side: null,
-      bh: true,
-      fh: false,
-      arm: 10,
-      wd: null,
-      ws: null,
-      dist: null,
-      shape: 'straight',
-      curv: 0,
-    });
-    window.history.replaceState({}, '', window.location.pathname);
-  };
-
   const handleSaveCoefficients = () => {
     saveCoefficients(coefficients);
   };
@@ -111,12 +84,6 @@ export function CalculatorPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {linkCopied && (
-          <div className="fixed top-20 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in z-50">
-            Link kopieret!
-          </div>
-        )}
-
         <ProfileSection
           side={state.side}
           bh={state.bh}
@@ -128,8 +95,6 @@ export function CalculatorPage() {
           onBHChange={(bh) => setState((prev) => ({ ...prev, bh }))}
           onFHChange={(fh) => setState((prev) => ({ ...prev, fh }))}
           onArmChange={(arm) => setState((prev) => ({ ...prev, arm }))}
-          onCopyLink={handleCopyLink}
-          onReset={handleReset}
           skipProfile={skipProfile}
         />
 

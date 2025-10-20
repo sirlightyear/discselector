@@ -34,7 +34,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
-      <Header />
+      <Header currentPage={currentPage} />
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
       {currentPage === 'calculator' && <CalculatorPage />}
       {currentPage === 'collection' && <CollectionPage onNavigateToBag={handleNavigateToBag} />}

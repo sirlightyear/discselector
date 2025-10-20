@@ -58,6 +58,20 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
         </div>
       </div>
 
+      {recommendation.throwingPower && (
+        <div className="mb-4">
+          <div className="text-sm font-medium text-slate-700 mb-1">Anbefalet kastekraft</div>
+          <div className="text-base font-semibold text-emerald-700">
+            Speed {recommendation.throwingPower.recommendedSpeed}
+          </div>
+          {recommendation.throwingPower.warning && (
+            <div className="mt-2 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 rounded text-sm">
+              {recommendation.throwingPower.warning}
+            </div>
+          )}
+        </div>
+      )}
+
       <div>
         <div className="text-sm font-medium text-slate-700 mb-2">Tips</div>
         <ul className="space-y-1">

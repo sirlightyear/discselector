@@ -191,6 +191,37 @@ export function generateTips(
   return tips;
 }
 
+function calculateThrowingPower(
+  arm: number,
+  dist: number,
+  discType: DiscType,
+  wind: WindComponents
+): { recommendedSpeed: number; warning?: string } {
+  const baseSpeedMap: Record<DiscType, number> = {
+    'Putter': 3,
+    'Midrange': 5,
+    'Fairway driver': 9,
+    'Driver': 12,
+  };
+
+  let baseSpeed = baseSpeedMap[discType];
+  const distanceMultiplier = dist / 100;
+  const windAdjustment = wind.head > 0 ? Math.min(wind.head * 0.5, 2) : 0;
+  const recommendedSpeed = Math.min(14, Math.max(1, Math.round(baseSpeed * distanceMultiplier + windAdjustment)));
+
+  const result: { recommendedSpeed: number; warning?: string } = {
+    recommendedSpeed,
+  };
+
+  if (recommendedSpeed > arm + 1) {
+    result.warning = `Du har måske ikke kraft nok til at nå de ${dist}m. Overvej en mere understabil disc eller kortere distance.`;
+  } else if (recommendedSpeed > arm) {
+    result.warning = `De ${dist}m er lige på grænsen af din armspeed. Kast med fuld kraft.`;
+  }
+
+  return result;
+}
+
 export function generateRecommendations(
   side: HandSide,
   bh: boolean,
@@ -225,6 +256,7 @@ export function generateRecommendations(
     );
     const discType = calculateDiscType(dist, wind, arm, coef);
     const release = calculateRelease(side, throwType, shape, curv, wind);
+    const throwingPower = calculateThrowingPower(arm, dist, discType, wind);
 
     recommendations.push({
       throwType,
@@ -235,6 +267,7 @@ export function generateRecommendations(
       release: release.text,
       releaseAngle: release.angle,
       tips,
+      throwingPower,
     });
   }
 

@@ -9,8 +9,6 @@ interface ProfileSectionProps {
   onBHChange: (enabled: boolean) => void;
   onFHChange: (enabled: boolean) => void;
   onArmChange: (arm: number) => void;
-  onCopyLink: () => void;
-  onReset: () => void;
   skipProfile: boolean;
 }
 
@@ -23,8 +21,6 @@ export function ProfileSection({
   onBHChange,
   onFHChange,
   onArmChange,
-  onCopyLink,
-  onReset,
   skipProfile,
 }: ProfileSectionProps) {
   const handleBHToggle = () => {
@@ -110,9 +106,9 @@ export function ProfileSection({
       )}
 
       {side && (
-        <div className="mb-4">
+        <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Arm-speed: {arm}
+            Hvor stor arm speed tror du at du er i stand til at kaste?
           </label>
           <div className="grid grid-cols-7 gap-2">
             {[8, 9, 10, 11, 12, 13, 14].map((speed) => (
@@ -130,23 +126,6 @@ export function ProfileSection({
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {side && (
-        <div className="flex gap-3 pt-4 border-t border-slate-200">
-          <button
-            onClick={onCopyLink}
-            className="flex-1 bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 transition-colors"
-          >
-            Kopier link
-          </button>
-          <button
-            onClick={onReset}
-            className="bg-slate-200 text-slate-700 py-3 px-4 rounded-lg font-medium hover:bg-slate-300 transition-colors"
-          >
-            Nulstil
-          </button>
         </div>
       )}
     </section>

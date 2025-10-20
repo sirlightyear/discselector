@@ -231,6 +231,7 @@ export interface Database {
           dark_mode: boolean
           hand_preference: string | null
           throw_type_preference: string | null
+          startup_page: string | null
           created_at: string
           updated_at: string
         }
@@ -240,6 +241,7 @@ export interface Database {
           dark_mode?: boolean
           hand_preference?: string | null
           throw_type_preference?: string | null
+          startup_page?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -249,6 +251,7 @@ export interface Database {
           dark_mode?: boolean
           hand_preference?: string | null
           throw_type_preference?: string | null
+          startup_page?: string | null
           created_at?: string
           updated_at?: string
         }

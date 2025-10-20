@@ -48,6 +48,10 @@ export interface Recommendation {
   release: string;
   releaseAngle: number;
   tips: string[];
+  throwingPower?: {
+    recommendedSpeed: number;
+    warning?: string;
+  };
 }
 
 export interface WindComponents {
