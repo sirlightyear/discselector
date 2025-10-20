@@ -4,6 +4,9 @@ import { LoginPage } from './pages/LoginPage';
 import { CalculatorPage } from './pages/CalculatorPage';
 import { CollectionPage } from './pages/CollectionPage';
 import { BagsPage } from './pages/BagsPage';
+import { CoursesPage } from './pages/CoursesPage';
+import { WishlistPage } from './pages/WishlistPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { Navigation } from './components/Navigation';
 import { Header } from './components/Header';
 
@@ -36,9 +39,9 @@ function AppContent() {
       {currentPage === 'calculator' && <CalculatorPage />}
       {currentPage === 'collection' && <CollectionPage onNavigateToBag={handleNavigateToBag} />}
       {currentPage === 'bags' && <BagsPage />}
-      {currentPage === 'courses' && <div className="p-8 text-center text-slate-600">Baner kommer snart...</div>}
-      {currentPage === 'wishlist' && <div className="p-8 text-center text-slate-600">Ønskeliste kommer snart...</div>}
-      {currentPage === 'settings' && <div className="p-8 text-center text-slate-600">Indstillinger kommer snart...</div>}
+      {currentPage === 'courses' && <CoursesPage />}
+      {currentPage === 'wishlist' && <WishlistPage />}
+      {currentPage === 'settings' && <SettingsPage />}
     </div>
   );
 }
