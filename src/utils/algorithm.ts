@@ -82,10 +82,10 @@ export function calculateStability(
   );
 
   let category: StabilityCategory;
-  if (score <= -1.0) category = 'Meget understabil';
-  else if (score <= -0.4) category = 'Understabil';
-  else if (score <= 0.4) category = 'Neutral';
-  else if (score <= 1.0) category = 'Overstabil';
+  if (score < -2) category = 'Meget understabil';
+  else if (score < 0) category = 'Understabil';
+  else if (score < 1) category = 'Neutral';
+  else if (score < 2) category = 'Overstabil';
   else category = 'Meget overstabil';
 
   return { score, category };

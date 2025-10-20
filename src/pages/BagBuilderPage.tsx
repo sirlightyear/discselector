@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Edit2 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
-import { Disc, Bag } from '../lib/database.types';
+import { Disc, Bag, DiscInsert } from '../lib/database.types';
 import { BagCoverageChart } from '../components/BagCoverageChart';
+import { getStabilityColor, getStabilityCategory } from '../utils/stability';
+import { EditDiscModal } from '../components/EditDiscModal';
 
 interface BagBuilderPageProps {
   bag: Bag;
@@ -15,6 +17,7 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
   const [availableDiscs, setAvailableDiscs] = useState<Disc[]>([]);
   const [bagDiscs, setBagDiscs] = useState<Disc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingDisc, setEditingDisc] = useState<Disc | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -91,13 +94,20 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
     }
   };
 
-  const getStabilityColor = (turn: number, fade: number): string => {
-    const stability = fade - turn;
-    if (stability < -1) return 'bg-green-500';
-    if (stability < 0) return 'bg-lime-500';
-    if (stability < 1) return 'bg-yellow-500';
-    if (stability < 2) return 'bg-orange-500';
-    return 'bg-red-500';
+  const handleUpdateDisc = async (discId: number, updates: Partial<DiscInsert>) => {
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update(updates)
+        .eq('disc_id', discId);
+
+      if (error) throw error;
+      await loadData();
+      setEditingDisc(null);
+    } catch (error) {
+      console.error('Error updating disc:', error);
+      throw error;
+    }
   };
 
   if (isLoading) {
@@ -173,12 +183,22 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           {disc.weight && (
                             <span className="text-xs text-slate-500">{disc.weight}g</span>
                           )}
-                          <div
-                            className={`w-2.5 h-2.5 rounded-full ${getStabilityColor(
-                              disc.turn,
-                              disc.fade
-                            )}`}
-                          />
+                          {disc.is_glow && (
+                            <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                              Glow
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2.5 h-2.5 rounded-full ${getStabilityColor(
+                                disc.turn,
+                                disc.fade
+                              )}`}
+                            />
+                            <span className="text-xs text-slate-600">
+                              {getStabilityCategory(disc.turn, disc.fade)}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex gap-3 text-xs">
                           <span>S: {disc.personal_speed ?? disc.speed}</span>
@@ -187,13 +207,25 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <span>F: {disc.personal_fade ?? disc.fade}</span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleRemoveDisc(disc)}
-                        className="text-slate-400 hover:text-red-600 transition-colors"
-                        title="Fjern fra bag"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingDisc(disc);
+                          }}
+                          className="text-slate-400 hover:text-blue-600 transition-colors"
+                          title="Rediger disc"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveDisc(disc)}
+                          className="text-slate-400 hover:text-red-600 transition-colors"
+                          title="Fjern fra bag"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -263,6 +295,14 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
           </div>
         </div>
       </div>
+
+      {editingDisc && (
+        <EditDiscModal
+          disc={editingDisc}
+          onClose={() => setEditingDisc(null)}
+          onUpdate={handleUpdateDisc}
+        />
+      )}
     </div>
   );
 }

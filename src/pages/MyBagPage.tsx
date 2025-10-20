@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert } from '../lib/database.types';
 import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
+import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 export function MyBagPage() {
   const { user } = useUser();
@@ -88,14 +89,6 @@ export function MyBagPage() {
     }
   };
 
-  const getStabilityColor = (turn: number, fade: number): string => {
-    const stability = fade - turn;
-    if (stability < -1) return 'bg-green-500';
-    if (stability < 0) return 'bg-lime-500';
-    if (stability < 1) return 'bg-yellow-500';
-    if (stability < 2) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
 
   if (isLoading) {
     return (
@@ -183,13 +176,18 @@ export function MyBagPage() {
                           Glow
                         </span>
                       )}
-                      <div
-                        className={`w-3 h-3 rounded-full ${getStabilityColor(
-                          disc.turn,
-                          disc.fade
-                        )}`}
-                        title="Stabilitet"
-                      />
+                      <div className="flex items-center gap-1">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getStabilityColor(
+                            disc.turn,
+                            disc.fade
+                          )}`}
+                          title="Stabilitet"
+                        />
+                        <span className="text-xs font-medium text-slate-600">
+                          {getStabilityCategory(disc.turn, disc.fade)}
+                        </span>
+                      </div>
                     </div>
                     {disc.visual_description && (
                       <p className="text-xs text-slate-500 mb-2">

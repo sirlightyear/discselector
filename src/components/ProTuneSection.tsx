@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProTuneCoefficients } from '../types';
-import { COEF_LIMITS, DEFAULT_COEFFICIENTS } from '../constants';
+import { COEF_LIMITS } from '../constants';
 
 interface ProTuneSectionProps {
   coefficients: ProTuneCoefficients;

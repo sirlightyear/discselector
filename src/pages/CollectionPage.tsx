@@ -5,11 +5,16 @@ import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert, Bag } from '../lib/database.types';
 import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
+import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 type DiscWithBags = Disc & { bags: Bag[] };
 type SortOption = 'name' | 'type' | 'newest' | 'most_used';
 
-export function CollectionPage() {
+interface CollectionPageProps {
+  onNavigateToBag?: (bagId: number) => void;
+}
+
+export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const { user } = useUser();
   const [discs, setDiscs] = useState<DiscWithBags[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,14 +120,6 @@ export function CollectionPage() {
     }
   };
 
-  const getStabilityColor = (turn: number, fade: number): string => {
-    const stability = fade - turn;
-    if (stability < -1) return 'bg-green-500';
-    if (stability < 0) return 'bg-lime-500';
-    if (stability < 1) return 'bg-yellow-500';
-    if (stability < 2) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
 
   const filteredAndSortedDiscs = useMemo(() => {
     let filtered = discs;
@@ -283,13 +280,18 @@ export function CollectionPage() {
                           Glow
                         </span>
                       )}
-                      <div
-                        className={`w-3 h-3 rounded-full ${getStabilityColor(
-                          disc.turn,
-                          disc.fade
-                        )}`}
-                        title="Stabilitet"
-                      />
+                      <div className="flex items-center gap-1">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getStabilityColor(
+                            disc.turn,
+                            disc.fade
+                          )}`}
+                          title="Stabilitet"
+                        />
+                        <span className="text-xs font-medium text-slate-600">
+                          {getStabilityCategory(disc.turn, disc.fade)}
+                        </span>
+                      </div>
                     </div>
                     {disc.visual_description && (
                       <p className="text-xs text-slate-500 mb-2">
@@ -357,14 +359,28 @@ export function CollectionPage() {
 
                 {disc.bags.length > 0 && (
                   <div className="border-t border-slate-100 pt-3 mt-3">
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>
-                        I {disc.bags.length} bag{disc.bags.length !== 1 ? 's' : ''}:{' '}
-                        <span className="font-medium text-slate-700">
-                          {disc.bags.map(bag => bag.name).join(', ')}
-                        </span>
-                      </span>
+                    <div className="flex items-start gap-2 text-xs text-slate-600">
+                      <ShoppingBag className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1.5">
+                        {disc.bags.map((bag, idx) => (
+                          <span key={bag.bag_id}>
+                            {onNavigateToBag ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onNavigateToBag(bag.bag_id);
+                                }}
+                                className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                              >
+                                {bag.name}
+                              </button>
+                            ) : (
+                              <span className="font-medium text-slate-700">{bag.name}</span>
+                            )}
+                            {idx < disc.bags.length - 1 && ', '}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

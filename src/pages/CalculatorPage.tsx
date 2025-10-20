@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppState, HandSide, LineShape, Recommendation } from '../types';
-import { Header } from '../components/Header';
 import { ProfileSection } from '../components/ProfileSection';
 import { WindSection } from '../components/WindSection';
 import { DistanceSection } from '../components/DistanceSection';
@@ -110,7 +109,6 @@ export function CalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
-      <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {linkCopied && (
