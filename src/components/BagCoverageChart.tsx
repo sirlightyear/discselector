@@ -28,7 +28,7 @@ export function BagCoverageChart({ discs }: BagCoverageChartProps) {
   const getStabilityScore = (disc: Disc) => {
     const turn = getTurn(disc);
     const fade = getFade(disc);
-    return turn - fade;
+    return turn + fade;
   };
 
   const speedCounts = speedRanges.map(range => ({

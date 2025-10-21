@@ -1,7 +1,7 @@
 import { StabilityCategory } from '../types';
 
 export function calculateStabilityScore(turn: number, fade: number): number {
-  return turn - fade;
+  return turn + fade;
 }
 
 export function getStabilityCategory(turn: number, fade: number): StabilityCategory {
