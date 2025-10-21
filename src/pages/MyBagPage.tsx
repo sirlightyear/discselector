@@ -179,13 +179,13 @@ export function MyBagPage() {
                       <div className="flex items-center gap-1">
                         <div
                           className={`w-3 h-3 rounded-full ${getStabilityColor(
-                            disc.turn,
-                            disc.fade
+                            disc.personal_turn ?? disc.turn,
+                            disc.personal_fade ?? disc.fade
                           )}`}
                           title="Stabilitet"
                         />
                         <span className="text-xs font-medium text-slate-600">
-                          {getStabilityCategory(disc.turn, disc.fade)}
+                          {getStabilityCategory(disc.personal_turn ?? disc.turn, disc.personal_fade ?? disc.fade)}
                         </span>
                       </div>
                     </div>
