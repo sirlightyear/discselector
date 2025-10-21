@@ -18,17 +18,17 @@ export function BagCoverageChart({ discs }: BagCoverageChartProps) {
   ];
 
   const stabilityCategories = [
-    { label: 'Meget understabil', min: -Infinity, max: -1.5, color: 'bg-green-500' },
-    { label: 'Understabil', min: -1.5, max: -0.5, color: 'bg-lime-500' },
-    { label: 'Neutral', min: -0.5, max: 0.5, color: 'bg-yellow-500' },
-    { label: 'Overstabil', min: 0.5, max: 2.5, color: 'bg-orange-500' },
+    { label: 'Meget understabil', min: -Infinity, max: -2, color: 'bg-green-500' },
+    { label: 'Understabil', min: -2, max: -0.1, color: 'bg-lime-500' },
+    { label: 'Neutral', min: -0.1, max: 1, color: 'bg-yellow-500' },
+    { label: 'Overstabil', min: 1, max: 2.5, color: 'bg-orange-500' },
     { label: 'Meget overstabil', min: 2.5, max: Infinity, color: 'bg-red-500' },
   ];
 
   const getStabilityScore = (disc: Disc) => {
     const turn = getTurn(disc);
     const fade = getFade(disc);
-    return fade - turn;
+    return turn - fade;
   };
 
   const speedCounts = speedRanges.map(range => ({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Heart, ExternalLink, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Edit2, Heart, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { WishlistItem, WishlistItemInsert } from '../lib/database.types';
@@ -197,7 +197,7 @@ export function WishlistPage() {
                       } transition-colors`}
                       title="Flyt op"
                     >
-                      <GripVertical className="w-5 h-5" />
+                      <ChevronUp className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleMovePriority(item.item_id, 'down')}
@@ -209,7 +209,7 @@ export function WishlistPage() {
                       } transition-colors`}
                       title="Flyt ned"
                     >
-                      <GripVertical className="w-5 h-5 rotate-180" />
+                      <ChevronDown className="w-5 h-5" />
                     </button>
                   </div>
 

@@ -6,9 +6,10 @@ import { PageType } from '../App';
 interface NavigationProps {
   currentPage: PageType;
   onNavigate: (page: PageType) => void;
+  favoritePages?: PageType[];
 }
 
-export function Navigation({ currentPage, onNavigate }: NavigationProps) {
+export function Navigation({ currentPage, onNavigate, favoritePages = [] }: NavigationProps) {
   const { user, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -47,7 +48,29 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             ))}
           </div>
 
-          <div className="md:hidden flex items-center gap-3">
+          <div className="md:hidden flex items-center gap-3 w-full">
+            {favoritePages.length === 2 && (
+              <div className="flex gap-2 flex-1">
+                {favoritePages.map((pageId) => {
+                  const item = navItems.find(n => n.id === pageId);
+                  if (!item) return null;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavigate(item.id)}
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                        currentPage === item.id
+                          ? 'bg-slate-800 text-white'
+                          : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-xs">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-slate-700 hover:text-slate-900 transition-colors"

@@ -200,13 +200,13 @@ function calculateThrowingPower(
   const baseSpeedMap: Record<DiscType, number> = {
     'Putter': 3,
     'Midrange': 5,
-    'Fairway driver': 9,
-    'Driver': 12,
+    'Fairway driver': 10,
+    'Driver': 13,
   };
 
   let baseSpeed = baseSpeedMap[discType];
-  const distanceMultiplier = dist / 100;
-  const windAdjustment = wind.head > 0 ? Math.min(wind.head * 0.5, 2) : 0;
+  const distanceMultiplier = dist / 90;
+  const windAdjustment = wind.head > 0 ? Math.min(wind.head * 0.6, 2) : 0;
   const recommendedSpeed = Math.min(14, Math.max(1, Math.round(baseSpeed * distanceMultiplier + windAdjustment)));
 
   const result: { recommendedSpeed: number; warning?: string } = {

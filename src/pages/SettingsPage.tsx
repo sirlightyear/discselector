@@ -3,6 +3,16 @@ import { Settings as SettingsIcon, Save, Moon, Sun } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { UserSettings, UserSettingsInsert } from '../lib/database.types';
+import { PageType } from '../App';
+
+const PAGE_OPTIONS: { value: PageType; label: string }[] = [
+  { value: 'calculator', label: 'Beregner' },
+  { value: 'collection', label: 'Samling' },
+  { value: 'bags', label: 'Bags' },
+  { value: 'courses', label: 'Baner' },
+  { value: 'wishlist', label: 'Ønskeliste' },
+  { value: 'settings', label: 'Indstillinger' },
+];
 
 export function SettingsPage() {
   const { user } = useUser();
@@ -14,6 +24,8 @@ export function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [handPreference, setHandPreference] = useState<'R' | 'L' | ''>('');
   const [throwTypePreference, setThrowTypePreference] = useState<'BH' | 'FH' | 'begge' | ''>('');
+  const [favoritePages, setFavoritePages] = useState<PageType[]>([]);
+  const [startupPage, setStartupPage] = useState<PageType>('calculator');
   const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
@@ -62,6 +74,8 @@ export function SettingsPage() {
         setDarkMode(data.dark_mode);
         setHandPreference((data.hand_preference as 'R' | 'L') || '');
         setThrowTypePreference((data.throw_type_preference as 'BH' | 'FH' | 'begge') || '');
+        setFavoritePages(Array.isArray(data.favorite_pages) ? data.favorite_pages as PageType[] : []);
+        setStartupPage((data.startup_page as PageType) || 'calculator');
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -104,7 +118,8 @@ export function SettingsPage() {
         dark_mode: darkMode,
         hand_preference: handPreference || null,
         throw_type_preference: throwTypePreference || null,
-        favorite_pages: settings?.favorite_pages || []
+        favorite_pages: favoritePages,
+        startup_page: startupPage
       };
 
       if (settings) {
@@ -265,6 +280,55 @@ export function SettingsPage() {
               </select>
               <p className="text-xs text-slate-500 mt-1">
                 Bruges som standard i beregneren
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Opstartsside
+              </label>
+              <select
+                value={startupPage}
+                onChange={(e) => setStartupPage(e.target.value as PageType)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
+              >
+                {PAGE_OPTIONS.map(page => (
+                  <option key={page.value} value={page.value}>{page.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500 mt-1">
+                Hvilken side der skal vises når du logger ind
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Favorit sider i mobil menu (vælg 2)
+              </label>
+              <div className="space-y-2">
+                {PAGE_OPTIONS.map(page => (
+                  <label key={page.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={favoritePages.includes(page.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          if (favoritePages.length < 2) {
+                            setFavoritePages([...favoritePages, page.value]);
+                          }
+                        } else {
+                          setFavoritePages(favoritePages.filter(p => p !== page.value));
+                        }
+                      }}
+                      disabled={!favoritePages.includes(page.value) && favoritePages.length >= 2}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
+                    />
+                    <span className="text-sm text-slate-700">{page.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                De valgte sider vises direkte i mobil menuen (alle sider er stadig tilgængelige i burger menuen)
               </p>
             </div>
           </div>

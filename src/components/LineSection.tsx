@@ -1,7 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import { TrendingUp, User } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { LineShape } from '../types';
-import { Point, analyzeLine } from '../utils/lineDetection';
 
 interface LineSectionProps {
   shape: LineShape;
@@ -9,127 +7,35 @@ interface LineSectionProps {
   onLineChange: (shape: LineShape, curv: number) => void;
 }
 
+type CurvePreset = {
+  label: string;
+  shape: LineShape;
+  curv: number;
+};
+
 export function LineSection({ shape, curv, onLineChange }: LineSectionProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [points, setPoints] = useState<Point[]>([]);
+  const presets: CurvePreset[] = [
+    { label: 'Meget venstre', shape: 'left', curv: 1.0 },
+    { label: 'Venstre', shape: 'left', curv: 0.7 },
+    { label: 'Lidt venstre', shape: 'left', curv: 0.3 },
+    { label: 'Lige', shape: 'straight', curv: 0 },
+    { label: 'Lidt højre', shape: 'right', curv: 0.3 },
+    { label: 'Højre', shape: 'right', curv: 0.7 },
+    { label: 'Meget højre', shape: 'right', curv: 1.0 },
+  ];
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#3b82f6';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    if (points.length > 0) {
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
-      }
-      ctx.stroke();
-    } else if (shape !== 'straight' || points.length === 0) {
-      drawPresetLine(ctx, canvas.width, canvas.height, shape);
-    }
-  }, [points, shape]);
-
-  const drawPresetLine = (ctx: CanvasRenderingContext2D, width: number, height: number, lineShape: LineShape) => {
-    if (points.length > 0) return;
-
-    const startX = 50;
-    const endX = width - 50;
-    const midY = height / 2;
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-
-    if (lineShape === 'straight') {
-      ctx.moveTo(startX, midY);
-      ctx.lineTo(endX, midY);
-    } else if (lineShape === 'left') {
-      ctx.moveTo(startX, midY);
-      ctx.quadraticCurveTo(width / 2, midY - 80, endX, midY);
-    } else if (lineShape === 'right') {
-      ctx.moveTo(startX, midY);
-      ctx.quadraticCurveTo(width / 2, midY + 80, endX, midY);
-    }
-
-    ctx.stroke();
-    ctx.setLineDash([]);
+  const handlePreset = (preset: CurvePreset) => {
+    onLineChange(preset.shape, preset.curv);
   };
 
-  const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    if ('touches' in e) {
-      const touch = e.touches[0];
-      return {
-        x: (touch.clientX - rect.left) * scaleX,
-        y: (touch.clientY - rect.top) * scaleY,
-      };
-    } else {
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
-      };
-    }
-  };
-
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    const coords = getCoordinates(e);
-    if (!coords) return;
-
-    setIsDrawing(true);
-    setPoints([coords]);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (!isDrawing) return;
-
-    const coords = getCoordinates(e);
-    if (!coords) return;
-
-    setPoints((prev) => [...prev, coords]);
-  };
-
-  const stopDrawing = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-
-    const analysis = analyzeLine(points);
-    onLineChange(analysis.shape, analysis.curv);
-  };
-
-  const handlePreset = (preset: LineShape) => {
-    setPoints([]);
-    onLineChange(preset, preset === 'straight' ? 0 : 0.5);
-  };
-
-  const handleClear = () => {
-    setPoints([]);
-    onLineChange('straight', 0);
+  const isActive = (preset: CurvePreset) => {
+    return shape === preset.shape && Math.abs(curv - preset.curv) < 0.1;
   };
 
   const getShapeText = () => {
     if (shape === 'straight') return 'Lige';
-    if (shape === 'left') return `Venstre-kurve (${curv.toFixed(2)})`;
-    return `Højre-kurve (${curv.toFixed(2)})`;
+    if (shape === 'left') return `Venstre-kurve (${curv.toFixed(1)})`;
+    return `Højre-kurve (${curv.toFixed(1)})`;
   };
 
   return (
@@ -140,78 +46,31 @@ export function LineSection({ shape, curv, onLineChange }: LineSectionProps) {
       </div>
 
       <p className="text-sm text-slate-600 mb-4">
-        Tegn venstre→højre. Vi udleder retning og kurvemængde.
+        Vælg ønsket linje for dit kast
       </p>
 
       <div className="mb-4">
-        <div className="relative bg-slate-50 rounded-lg overflow-hidden border-2 border-slate-200">
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={300}
-            className="w-full touch-none cursor-crosshair"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
-          <div className="absolute bottom-2 left-8 flex items-center gap-1 text-slate-500">
-            <User className="w-4 h-4" />
-            <span className="text-xs font-medium">Start her</span>
-          </div>
-        </div>
-        <div className="mt-2 flex justify-between items-center">
-          <span className="text-sm font-medium text-slate-700">
-            Tolkning: {getShapeText()}
-          </span>
-          <button
-            onClick={handleClear}
-            className="text-sm text-slate-600 hover:text-slate-800 underline"
-          >
-            Ryd
-          </button>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+          {presets.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => handlePreset(preset)}
+              className={`py-3 px-2 rounded-lg font-medium transition-all text-sm ${
+                isActive(preset)
+                  ? 'bg-amber-600 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Presets
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => handlePreset('straight')}
-            className={`py-3 px-4 rounded-lg font-medium transition-all ${
-              shape === 'straight' && points.length === 0
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Lige
-          </button>
-          <button
-            onClick={() => handlePreset('left')}
-            className={`py-3 px-4 rounded-lg font-medium transition-all ${
-              shape === 'left' && points.length === 0
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Venstre-kurve
-          </button>
-          <button
-            onClick={() => handlePreset('right')}
-            className={`py-3 px-4 rounded-lg font-medium transition-all ${
-              shape === 'right' && points.length === 0
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Højre-kurve
-          </button>
-        </div>
+      <div className="text-center py-2 bg-slate-50 rounded-lg">
+        <span className="text-sm font-medium text-slate-700">
+          Valgt: {getShapeText()}
+        </span>
       </div>
     </section>
   );
