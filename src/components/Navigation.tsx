@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calculator, Package, Briefcase, LogOut, Map, Heart, Settings, Menu, X } from 'lucide-react';
+import { Calculator, Package, Briefcase, Map, Heart, Settings, Menu, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { PageType } from '../App';
 
@@ -10,7 +10,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ currentPage, onNavigate, favoritePages = [] }: NavigationProps) {
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -82,18 +82,13 @@ export function Navigation({ currentPage, onNavigate, favoritePages = [] }: Navi
 
           <div className="flex items-center gap-3">
             {user && (
-              <>
-                <div className="text-sm font-medium text-slate-700 hidden sm:block">
-                  {user.initialer || user.user_id}
-                </div>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-2 text-slate-700 hover:text-red-600 transition-colors"
-                  title="Log ud"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </>
+              <button
+                onClick={() => handleNavigate('settings')}
+                className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors px-3 py-1 rounded-lg hover:bg-slate-100"
+                title="Gå til indstillinger"
+              >
+                {user.initialer || user.user_id}
+              </button>
             )}
           </div>
         </div>

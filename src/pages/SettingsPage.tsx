@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Moon, Sun } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Moon, Sun, LogOut } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { UserSettings, UserSettingsInsert } from '../lib/database.types';
@@ -15,7 +15,7 @@ const PAGE_OPTIONS: { value: PageType; label: string }[] = [
 ];
 
 export function SettingsPage() {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -340,6 +340,17 @@ export function SettingsPage() {
           >
             <Save className="w-4 h-4" />
             Gem indstillinger
+          </button>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Konto</h2>
+          <button
+            onClick={logout}
+            className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-5 h-5" />
+            Log ud
           </button>
         </div>
 
