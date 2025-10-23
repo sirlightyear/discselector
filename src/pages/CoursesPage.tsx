@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Course, CourseInsert, CourseHole, Disc } from '../lib/database.types';
 
 type CourseWithHoleCount = Course & { holeCount: number };
+type HoleWithDiscs = CourseHole & { disc_colors: string[] };
 
 export function CoursesPage() {
   const { user } = useUser();
@@ -192,7 +193,7 @@ export function CoursesPage() {
                       )}
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <span>{course.hole_count} huller</span>
-                        <span>Oprettet {new Date(course.created_at).toLocaleDateString('da-DK')}</span>
+                        <span>Sidst redigeret {new Date(course.updated_at).toLocaleDateString('da-DK')}</span>
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
@@ -367,7 +368,7 @@ interface CourseDetailPageProps {
 
 function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
   const { user } = useUser();
-  const [holes, setHoles] = useState<CourseHole[]>([]);
+  const [holes, setHoles] = useState<HoleWithDiscs[]>([]);
   const [selectedHole, setSelectedHole] = useState<CourseHole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -378,14 +379,36 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
   const loadHoles = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data: holesData, error: holesError } = await supabase
         .from('course_holes')
         .select('*')
         .eq('course_id', course.course_id)
         .order('hole_number');
 
-      if (error) throw error;
-      setHoles(data || []);
+      if (holesError) throw holesError;
+
+      const holesWithDiscs: HoleWithDiscs[] = await Promise.all(
+        (holesData || []).map(async (hole) => {
+          const { data: holeDiscs } = await supabase
+            .from('hole_discs')
+            .select('disc_id')
+            .eq('hole_id', hole.hole_id);
+
+          const discColors: string[] = [];
+          if (holeDiscs && holeDiscs.length > 0) {
+            const { data: discs } = await supabase
+              .from('discs')
+              .select('color')
+              .in('disc_id', holeDiscs.map(hd => hd.disc_id));
+
+            discColors.push(...(discs || []).map(d => d.color).filter(Boolean) as string[]);
+          }
+
+          return { ...hole, disc_colors: discColors };
+        })
+      );
+
+      setHoles(holesWithDiscs);
     } catch (error) {
       console.error('Error loading holes:', error);
     } finally {
@@ -398,8 +421,11 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
       <HoleDetailPage
         hole={selectedHole}
         courseName={course.name}
+        courseId={course.course_id}
+        allHoles={holes}
         onBack={() => setSelectedHole(null)}
         onUpdate={loadHoles}
+        onSelectHole={setSelectedHole}
       />
     );
   }
@@ -440,13 +466,24 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
             <button
               key={hole.hole_id}
               onClick={() => setSelectedHole(hole)}
-              className={`aspect-square rounded-lg border-2 transition-all font-bold text-lg ${
-                hole.notes
+              className={`aspect-square rounded-lg border-2 transition-all font-bold text-lg flex flex-col items-center justify-center gap-1 p-2 ${
+                hole.notes || hole.disc_colors.length > 0
                   ? 'bg-blue-100 border-blue-600 text-blue-800 hover:bg-blue-200'
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
               }`}
             >
-              {hole.hole_number}
+              <span>{hole.hole_number}</span>
+              {hole.disc_colors.length > 0 && (
+                <div className="flex gap-0.5">
+                  {hole.disc_colors.slice(0, 2).map((color, idx) => (
+                    <div
+                      key={idx}
+                      className="w-3 h-3 rounded-full border border-slate-400"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              )}
             </button>
           ))}
         </div>
@@ -458,11 +495,14 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
 interface HoleDetailPageProps {
   hole: CourseHole;
   courseName: string;
+  courseId: number;
+  allHoles: CourseHole[];
   onBack: () => void;
   onUpdate: () => void;
+  onSelectHole: (hole: CourseHole) => void;
 }
 
-function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPageProps) {
+function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate, onSelectHole }: HoleDetailPageProps) {
   const { user } = useUser();
   const [notes, setNotes] = useState(hole.notes || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -517,6 +557,14 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
         .eq('hole_id', hole.hole_id);
 
       if (error) throw error;
+
+      await supabase
+        .from('courses')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('course_id', courseId);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       onUpdate();
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -535,6 +583,12 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
         });
 
       if (error) throw error;
+
+      await supabase
+        .from('courses')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('course_id', courseId);
+
       await loadData();
     } catch (error) {
       console.error('Error adding disc:', error);
@@ -550,6 +604,12 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
         .eq('disc_id', disc.disc_id);
 
       if (error) throw error;
+
+      await supabase
+        .from('courses')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('course_id', courseId);
+
       await loadData();
     } catch (error) {
       console.error('Error removing disc:', error);
@@ -568,18 +628,49 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={onBack}
-              className="text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">
-                Hul {hole.hole_number}
-              </h1>
-              <p className="text-sm text-slate-600">{courseName}</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onBack}
+                className="text-slate-600 hover:text-slate-800 transition-colors"
+                title="Tilbage til oversigt"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800">
+                  Hul {hole.hole_number}
+                </h1>
+                <p className="text-sm text-slate-600">{courseName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const currentIndex = allHoles.findIndex(h => h.hole_id === hole.hole_id);
+                  if (currentIndex > 0) {
+                    onSelectHole(allHoles[currentIndex - 1]);
+                  }
+                }}
+                disabled={allHoles.findIndex(h => h.hole_id === hole.hole_id) === 0}
+                className="p-2 text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Forrige hul"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={() => {
+                  const currentIndex = allHoles.findIndex(h => h.hole_id === hole.hole_id);
+                  if (currentIndex < allHoles.length - 1) {
+                    onSelectHole(allHoles[currentIndex + 1]);
+                  }
+                }}
+                disabled={allHoles.findIndex(h => h.hole_id === hole.hole_id) === allHoles.length - 1}
+                className="p-2 text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Næste hul"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
           </div>
 
@@ -618,12 +709,26 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
                 {holeDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3"
+                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3 gap-3"
                   >
-                    <span className="font-medium text-slate-800">{disc.name}</span>
+                    <div className="flex items-center gap-3 flex-1">
+                      {disc.color && (
+                        <div
+                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"
+                          style={{ backgroundColor: disc.color }}
+                          title={disc.color}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-800">{disc.name}</div>
+                        <div className="text-xs text-slate-600">
+                          {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                        </div>
+                      </div>
+                    </div>
                     <button
                       onClick={() => handleRemoveDisc(disc)}
-                      className="text-slate-400 hover:text-red-600 transition-colors"
+                      className="text-slate-400 hover:text-red-600 transition-colors flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -646,12 +751,26 @@ function HoleDetailPage({ hole, courseName, onBack, onUpdate }: HoleDetailPagePr
                 {availableDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3"
+                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3 gap-3"
                   >
-                    <span className="font-medium text-slate-800">{disc.name}</span>
+                    <div className="flex items-center gap-3 flex-1">
+                      {disc.color && (
+                        <div
+                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"
+                          style={{ backgroundColor: disc.color }}
+                          title={disc.color}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-800">{disc.name}</div>
+                        <div className="text-xs text-slate-600">
+                          {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                        </div>
+                      </div>
+                    </div>
                     <button
                       onClick={() => handleAddDisc(disc)}
-                      className="text-slate-400 hover:text-blue-600 transition-colors"
+                      className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

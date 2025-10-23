@@ -10,8 +10,31 @@ import { parseURLState, buildURL, shouldSkipProfileUI } from '../utils/urlState'
 import { loadCoefficients, saveCoefficients } from '../utils/storage';
 import { normalizeWind, generateRecommendations } from '../utils/algorithm';
 import { DEFAULT_COEFFICIENTS } from '../constants';
+import { useUser } from '../contexts/UserContext';
+import { supabase } from '../lib/supabase';
+import { UserSettings } from '../lib/database.types';
 
 export function CalculatorPage() {
+  const { user } = useUser();
+  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .maybeSingle()
+        .then(({ data }) => {
+          setUserSettings(data);
+          setIsLoadingSettings(false);
+        });
+    } else {
+      setIsLoadingSettings(false);
+    }
+  }, [user]);
+
   const [state, setState] = useState<AppState>(() => {
     const urlState = parseURLState();
     return {
@@ -26,6 +49,15 @@ export function CalculatorPage() {
       curv: urlState.curv !== undefined ? urlState.curv : 0,
     };
   });
+
+  useEffect(() => {
+    if (!isLoadingSettings && userSettings?.hand_preference && !state.side) {
+      setState((prev) => ({
+        ...prev,
+        side: userSettings.hand_preference as HandSide
+      }));
+    }
+  }, [isLoadingSettings, userSettings, state.side]);
 
   const [coefficients, setCoefficients] = useState(() => loadCoefficients());
   const [skipProfile] = useState(() => shouldSkipProfileUI(parseURLState()));
