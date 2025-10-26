@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calculator, Package, Briefcase, Map, Heart, Settings, Menu, X } from 'lucide-react';
+import { Calculator, Package, Briefcase, Map, Heart, Settings, Menu, X, Link } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { PageType } from '../App';
 
@@ -19,6 +19,7 @@ export function Navigation({ currentPage, onNavigate, favoritePages = [] }: Navi
     { id: 'bags' as PageType, label: 'Bags', icon: Briefcase },
     { id: 'courses' as PageType, label: 'Baner', icon: Map },
     { id: 'wishlist' as PageType, label: 'Ønskeliste', icon: Heart },
+    { id: 'links' as PageType, label: 'Links', icon: Link },
     { id: 'settings' as PageType, label: 'Indstillinger', icon: Settings },
   ];
 

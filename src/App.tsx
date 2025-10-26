@@ -7,11 +7,12 @@ import { BagsPage } from './pages/BagsPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LinksPage } from './pages/LinksPage';
 import { Navigation } from './components/Navigation';
 import { Header } from './components/Header';
 import { supabase } from './lib/supabase';
 
-export type PageType = 'calculator' | 'collection' | 'bags' | 'courses' | 'wishlist' | 'settings';
+export type PageType = 'calculator' | 'collection' | 'bags' | 'courses' | 'wishlist' | 'links' | 'settings';
 
 function AppContent() {
   const { user, isLoading } = useUser();
@@ -72,6 +73,7 @@ function AppContent() {
       {currentPage === 'bags' && <BagsPage />}
       {currentPage === 'courses' && <CoursesPage />}
       {currentPage === 'wishlist' && <WishlistPage />}
+      {currentPage === 'links' && <LinksPage />}
       {currentPage === 'settings' && <SettingsPage />}
     </div>
   );

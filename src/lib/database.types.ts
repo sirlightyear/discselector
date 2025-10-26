@@ -288,6 +288,90 @@ export interface Database {
           updated_at?: string
         }
       }
+      link_groups: {
+        Row: {
+          group_id: number
+          user_id: string
+          name: string
+          position: number
+          is_public: boolean
+          allow_editing: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          group_id?: number
+          user_id: string
+          name: string
+          position?: number
+          is_public?: boolean
+          allow_editing?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          group_id?: number
+          user_id?: string
+          name?: string
+          position?: number
+          is_public?: boolean
+          allow_editing?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      links: {
+        Row: {
+          link_id: number
+          group_id: number
+          url: string
+          description: string | null
+          position: number
+          is_favorite: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          link_id?: number
+          group_id: number
+          url: string
+          description?: string | null
+          position?: number
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          link_id?: number
+          group_id?: number
+          url?: string
+          description?: string | null
+          position?: number
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      link_group_followers: {
+        Row: {
+          user_id: string
+          group_id: number
+          is_read_only: boolean
+          followed_at: string
+        }
+        Insert: {
+          user_id: string
+          group_id: number
+          is_read_only?: boolean
+          followed_at?: string
+        }
+        Update: {
+          user_id?: string
+          group_id?: number
+          is_read_only?: boolean
+          followed_at?: string
+        }
+      }
     }
   }
 }
@@ -313,3 +397,11 @@ export type UserSettingsUpdate = Database['public']['Tables']['user_settings']['
 export type WishlistItem = Database['public']['Tables']['wishlist_items']['Row']
 export type WishlistItemInsert = Database['public']['Tables']['wishlist_items']['Insert']
 export type WishlistItemUpdate = Database['public']['Tables']['wishlist_items']['Update']
+export type LinkGroup = Database['public']['Tables']['link_groups']['Row']
+export type LinkGroupInsert = Database['public']['Tables']['link_groups']['Insert']
+export type LinkGroupUpdate = Database['public']['Tables']['link_groups']['Update']
+export type Link = Database['public']['Tables']['links']['Row']
+export type LinkInsert = Database['public']['Tables']['links']['Insert']
+export type LinkUpdate = Database['public']['Tables']['links']['Update']
+export type LinkGroupFollower = Database['public']['Tables']['link_group_followers']['Row']
+export type LinkGroupFollowerInsert = Database['public']['Tables']['link_group_followers']['Insert']

@@ -11,6 +11,7 @@ const PAGE_OPTIONS: { value: PageType; label: string }[] = [
   { value: 'bags', label: 'Bags' },
   { value: 'courses', label: 'Baner' },
   { value: 'wishlist', label: 'Ønskeliste' },
+  { value: 'links', label: 'Links' },
   { value: 'settings', label: 'Indstillinger' },
 ];
 
