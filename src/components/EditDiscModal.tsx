@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, ExternalLink } from 'lucide-react';
 import { Disc, DiscInsert } from '../lib/database.types';
+import { MANUFACTURERS } from '../constants/manufacturers';
 
 interface EditDiscModalProps {
   disc: Disc;
@@ -138,14 +139,19 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Producent (valgfrit)
               </label>
-              <input
-                type="text"
+              <select
                 value={manufacturer}
                 onChange={(e) => setManufacturer(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="f.eks. Innova"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
                 disabled={isSubmitting}
-              />
+              >
+                <option value="">Vælg producent...</option>
+                {MANUFACTURERS.map((mfg) => (
+                  <option key={mfg} value={mfg}>
+                    {mfg}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

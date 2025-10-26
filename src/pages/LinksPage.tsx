@@ -75,13 +75,21 @@ export function LinksPage() {
   const createDefaultGroups = async () => {
     if (!user) return;
 
-    const groupInserts: LinkGroupInsert[] = DEFAULT_GROUPS.map((name, index) => ({
-      user_id: user.user_id,
-      name,
-      position: index
-    }));
+    try {
+      const groupInserts: LinkGroupInsert[] = DEFAULT_GROUPS.map((name, index) => ({
+        user_id: user.user_id,
+        name,
+        position: index
+      }));
 
-    await supabase.from('link_groups').insert(groupInserts);
+      const { error } = await supabase.from('link_groups').insert(groupInserts);
+
+      if (error) {
+        console.error('Error creating default groups:', error);
+      }
+    } catch (error) {
+      console.error('Error creating default groups:', error);
+    }
   };
 
   const handleAddGroup = async (name: string) => {
@@ -90,16 +98,24 @@ export function LinksPage() {
     try {
       const maxPosition = Math.max(...groups.map(g => g.position), -1);
 
-      await supabase.from('link_groups').insert({
+      const { data, error } = await supabase.from('link_groups').insert({
         user_id: user.user_id,
         name: name.trim(),
         position: maxPosition + 1
-      });
+      }).select();
 
+      if (error) {
+        console.error('Error adding group:', error);
+        alert('Kunne ikke oprette gruppe: ' + error.message);
+        return;
+      }
+
+      console.log('Group created:', data);
       await loadGroups();
       setShowAddGroupModal(false);
     } catch (error) {
       console.error('Error adding group:', error);
+      alert('Kunne ikke oprette gruppe');
     }
   };
 
