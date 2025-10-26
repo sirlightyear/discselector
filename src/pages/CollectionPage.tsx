@@ -267,9 +267,11 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                       </h3>
                     </div>
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                        {disc.throw_type}
-                      </span>
+                      {disc.disc_type && (
+                        <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                          {disc.disc_type}
+                        </span>
+                      )}
                       {disc.weight && (
                         <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
                           {disc.weight}g

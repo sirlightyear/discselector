@@ -723,6 +723,7 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                         <div className="font-medium text-slate-800">{disc.name}</div>
                         <div className="text-xs text-slate-600">
                           {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                          {disc.disc_type && <span className="ml-2 text-slate-500">• {disc.disc_type}</span>}
                         </div>
                       </div>
                     </div>
@@ -765,6 +766,7 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                         <div className="font-medium text-slate-800">{disc.name}</div>
                         <div className="text-xs text-slate-600">
                           {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                          {disc.disc_type && <span className="ml-2 text-slate-500">• {disc.disc_type}</span>}
                         </div>
                       </div>
                     </div>
