@@ -272,6 +272,11 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                           {disc.disc_type}
                         </span>
                       )}
+                      {disc.manufacturer && (
+                        <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                          {disc.manufacturer.length > 15 ? disc.manufacturer.substring(0, 15) + '...' : disc.manufacturer}
+                        </span>
+                      )}
                       {disc.weight && (
                         <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
                           {disc.weight}g

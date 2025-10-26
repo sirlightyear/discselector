@@ -177,9 +177,16 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <h3 className="font-semibold text-slate-800">{disc.name}</h3>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                            {disc.throw_type}
-                          </span>
+                          {disc.disc_type && (
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              {disc.disc_type}
+                            </span>
+                          )}
+                          {disc.manufacturer && (
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              {disc.manufacturer.length > 15 ? disc.manufacturer.substring(0, 15) + '...' : disc.manufacturer}
+                            </span>
+                          )}
                           {disc.weight && (
                             <span className="text-xs text-slate-500">{disc.weight}g</span>
                           )}
@@ -260,18 +267,30 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <h3 className="font-semibold text-slate-800">{disc.name}</h3>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                            {disc.throw_type}
-                          </span>
+                          {disc.disc_type && (
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              {disc.disc_type}
+                            </span>
+                          )}
+                          {disc.manufacturer && (
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              {disc.manufacturer.length > 15 ? disc.manufacturer.substring(0, 15) + '...' : disc.manufacturer}
+                            </span>
+                          )}
                           {disc.weight && (
                             <span className="text-xs text-slate-500">{disc.weight}g</span>
                           )}
-                          <div
-                            className={`w-2.5 h-2.5 rounded-full ${getStabilityColor(
-                              disc.turn,
-                              disc.fade
-                            )}`}
-                          />
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2.5 h-2.5 rounded-full ${getStabilityColor(
+                                disc.personal_turn ?? disc.turn,
+                                disc.personal_fade ?? disc.fade
+                              )}`}
+                            />
+                            <span className="text-xs text-slate-600">
+                              {getStabilityCategory(disc.personal_turn ?? disc.turn, disc.personal_fade ?? disc.fade)}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex gap-3 text-xs">
                           <span>S: {disc.personal_speed ?? disc.speed}</span>
