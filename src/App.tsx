@@ -65,7 +65,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-purple-50 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200">
       <Header currentPage={currentPage} />
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} favoritePages={favoritePages} />
       {currentPage === 'calculator' && <CalculatorPage />}
