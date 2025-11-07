@@ -113,7 +113,7 @@ export function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200">
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <ProfileSection
