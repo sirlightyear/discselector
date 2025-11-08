@@ -11,15 +11,15 @@ interface AddDiscModalProps {
 
 export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [name, setName] = useState('');
-  const [speed, setSpeed] = useState<number | ''>(5);
-  const [glide, setGlide] = useState<number | ''>(4);
-  const [turn, setTurn] = useState<number | ''>(0);
-  const [fade, setFade] = useState<number | ''>(1);
+  const [speed, setSpeed] = useState<number | ''>('');
+  const [glide, setGlide] = useState<number | ''>('');
+  const [turn, setTurn] = useState<number | ''>('');
+  const [fade, setFade] = useState<number | ''>('');
   const [throwType, setThrowType] = useState<'forhånd' | 'baghånd' | 'begge'>('begge');
   const [note, setNote] = useState('');
   const [weight, setWeight] = useState<number | ''>('');
   const [isGlow, setIsGlow] = useState(false);
-  const [color, setColor] = useState('#3b82f6');
+  const [color, setColor] = useState('');
   const [visualDescription, setVisualDescription] = useState('');
   const [personalSpeed, setPersonalSpeed] = useState<number | ''>('');
   const [personalGlide, setPersonalGlide] = useState<number | ''>('');
