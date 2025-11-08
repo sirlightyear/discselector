@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, X, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, X, Edit2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Disc, Bag, DiscInsert } from '../lib/database.types';
@@ -39,15 +39,16 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
 
       if (discsError) throw discsError;
 
-      const { data: bagDiscIds, error: bagDiscsError } = await supabase
+      const { data: bagDiscData, error: bagDiscsError } = await supabase
         .from('bag_discs')
-        .select('disc_id')
-        .eq('bag_id', bag.bag_id);
+        .select('disc_id, position')
+        .eq('bag_id', bag.bag_id)
+        .order('position');
 
       if (bagDiscsError) throw bagDiscsError;
 
-      const bagDiscIdSet = new Set(bagDiscIds?.map(bd => bd.disc_id) || []);
-      const inBag = allDiscs?.filter(d => bagDiscIdSet.has(d.disc_id)) || [];
+      const bagDiscIdSet = new Set(bagDiscData?.map(bd => bd.disc_id) || []);
+      const inBag = bagDiscData?.map(bd => allDiscs?.find(d => d.disc_id === bd.disc_id)).filter(Boolean) as Disc[] || [];
       const available = allDiscs?.filter(d => !bagDiscIdSet.has(d.disc_id)) || [];
 
       setBagDiscs(inBag);
@@ -61,11 +62,14 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
 
   const handleAddDisc = async (disc: Disc) => {
     try {
+      const maxPosition = bagDiscs.length > 0 ? bagDiscs.length : 0;
+
       const { error } = await supabase
         .from('bag_discs')
         .insert({
           bag_id: bag.bag_id,
-          disc_id: disc.disc_id
+          disc_id: disc.disc_id,
+          position: maxPosition
         });
 
       if (error) throw error;
@@ -107,6 +111,36 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
     } catch (error) {
       console.error('Error updating disc:', error);
       throw error;
+    }
+  };
+
+  const handleMoveDisc = async (discIndex: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && discIndex === 0) return;
+    if (direction === 'down' && discIndex === bagDiscs.length - 1) return;
+
+    const newIndex = direction === 'up' ? discIndex - 1 : discIndex + 1;
+    const newBagDiscs = [...bagDiscs];
+    [newBagDiscs[discIndex], newBagDiscs[newIndex]] = [newBagDiscs[newIndex], newBagDiscs[discIndex]];
+
+    try {
+      const updates = newBagDiscs.map((disc, index) => ({
+        disc_id: disc.disc_id,
+        position: index
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('bag_discs')
+          .update({ position: update.position })
+          .eq('bag_id', bag.bag_id)
+          .eq('disc_id', update.disc_id);
+
+        if (error) throw error;
+      }
+
+      setBagDiscs(newBagDiscs);
+    } catch (error) {
+      console.error('Error moving disc:', error);
     }
   };
 
@@ -160,12 +194,38 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {bagDiscs.map((disc) => (
+                {bagDiscs.map((disc, index) => (
                   <div
                     key={disc.disc_id}
                     className="border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden"
                   >
                     <div className="flex items-start">
+                      <div className="flex flex-col gap-2 p-2 border-r border-slate-200">
+                        <button
+                          onClick={() => handleMoveDisc(index, 'up')}
+                          disabled={index === 0}
+                          className={`${
+                            index === 0
+                              ? 'text-slate-300 cursor-not-allowed'
+                              : 'text-slate-400 hover:text-slate-700'
+                          } transition-colors`}
+                          title="Flyt op"
+                        >
+                          <ChevronUp className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveDisc(index, 'down')}
+                          disabled={index === bagDiscs.length - 1}
+                          className={`${
+                            index === bagDiscs.length - 1
+                              ? 'text-slate-300 cursor-not-allowed'
+                              : 'text-slate-400 hover:text-slate-700'
+                          } transition-colors`}
+                          title="Flyt ned"
+                        >
+                          <ChevronDown className="w-5 h-5" />
+                        </button>
+                      </div>
                       {disc.photo_url && (
                         <div className="w-20 h-20 flex-shrink-0 bg-slate-100">
                           <img
