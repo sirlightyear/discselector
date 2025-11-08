@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Upload, Loader2 } from 'lucide-react';
 import { DiscInsert } from '../lib/database.types';
 import { MANUFACTURERS } from '../constants/manufacturers';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 interface AddDiscModalProps {
   onClose: () => void;
@@ -29,6 +30,9 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [plastic, setPlastic] = useState('');
   const [manufacturer, setManufacturer] = useState('');
   const [purchaseYear, setPurchaseYear] = useState<number | ''>('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +52,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
 
     try {
       setIsSubmitting(true);
+
+      let photoUrl: string | null = null;
+      if (photoFile) {
+        setIsUploadingPhoto(true);
+        try {
+          photoUrl = await uploadToCloudinary(photoFile);
+        } catch (uploadError) {
+          setError('Kunne ikke uploade billede. Prøv igen.');
+          console.error(uploadError);
+          setIsSubmitting(false);
+          setIsUploadingPhoto(false);
+          return;
+        }
+        setIsUploadingPhoto(false);
+      }
       await onAdd({
         name: name.trim(),
         speed: Number(speed),
@@ -69,6 +88,7 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         plastic: plastic.trim() || null,
         manufacturer: manufacturer.trim() || null,
         purchase_year: purchaseYear === '' ? null : Number(purchaseYear),
+        photo_url: photoUrl,
       });
     } catch (err) {
       setError('Kunne ikke tilføje disc. Prøv igen.');
@@ -442,6 +462,56 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               />
               <span className="text-sm font-medium text-slate-700">Gennemsigtig</span>
             </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Foto af disc (valgfrit)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setPhotoFile(file);
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setPhotoPreview(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              disabled={isSubmitting}
+            />
+            {photoPreview && (
+              <div className="mt-2 relative">
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            {isUploadingPhoto && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Uploader billede...</span>
+              </div>
+            )}
           </div>
 
           <div>

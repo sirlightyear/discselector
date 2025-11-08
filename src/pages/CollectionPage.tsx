@@ -250,10 +250,21 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             {filteredAndSortedDiscs.map((disc) => (
               <div
                 key={disc.disc_id}
-                className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
+                {disc.photo_url && (
+                  <div className="w-full h-48 overflow-hidden bg-slate-100">
+                    <img
+                      src={disc.photo_url}
+                      alt={disc.name}
+                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => window.open(disc.photo_url!, '_blank')}
+                    />
+                  </div>
+                )}
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {disc.color && (
                         <div
@@ -391,6 +402,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             ))}
           </div>
