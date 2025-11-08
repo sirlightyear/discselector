@@ -163,10 +163,21 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                 {bagDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors"
+                    className="border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex items-start">
+                      {disc.photo_url && (
+                        <div className="w-20 h-20 flex-shrink-0 bg-slate-100">
+                          <img
+                            src={disc.photo_url}
+                            alt={disc.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {disc.color && (
                             <div
@@ -213,25 +224,27 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <span>T: {disc.personal_turn ?? disc.turn}</span>
                           <span>F: {disc.personal_fade ?? disc.fade}</span>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingDisc(disc);
-                          }}
-                          className="text-slate-400 hover:text-blue-600 transition-colors"
-                          title="Rediger disc"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRemoveDisc(disc)}
-                          className="text-slate-400 hover:text-red-600 transition-colors"
-                          title="Fjern fra bag"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingDisc(disc);
+                              }}
+                              className="text-slate-400 hover:text-blue-600 transition-colors"
+                              title="Rediger disc"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveDisc(disc)}
+                              className="text-slate-400 hover:text-red-600 transition-colors"
+                              title="Fjern fra bag"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -253,10 +266,21 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                 {availableDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors"
+                    className="border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex items-start">
+                      {disc.photo_url && (
+                        <div className="w-20 h-20 flex-shrink-0 bg-slate-100">
+                          <img
+                            src={disc.photo_url}
+                            alt={disc.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {disc.color && (
                             <div
@@ -298,14 +322,16 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <span>T: {disc.personal_turn ?? disc.turn}</span>
                           <span>F: {disc.personal_fade ?? disc.fade}</span>
                         </div>
+                          </div>
+                          <button
+                            onClick={() => handleAddDisc(disc)}
+                            className="text-slate-400 hover:text-blue-600 transition-colors"
+                            title="Tilføj til bag"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleAddDisc(disc)}
-                        className="text-slate-400 hover:text-blue-600 transition-colors"
-                        title="Tilføj til bag"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 ))}

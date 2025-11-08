@@ -709,16 +709,24 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                 {holeDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3 gap-3"
+                    className="flex items-center justify-between border border-slate-200 rounded-lg overflow-hidden"
                   >
                     <div className="flex items-center gap-3 flex-1">
-                      {disc.color && (
+                      {disc.photo_url ? (
+                        <div className="w-16 h-16 flex-shrink-0 bg-slate-100">
+                          <img
+                            src={disc.photo_url}
+                            alt={disc.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : disc.color ? (
                         <div
-                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"
+                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0 ml-3"
                           style={{ backgroundColor: disc.color }}
                           title={disc.color}
                         />
-                      )}
+                      ) : null}
                       <div className="flex-1">
                         <div className="font-medium text-slate-800">{disc.name}</div>
                         <div className="text-xs text-slate-600">
@@ -729,7 +737,7 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                     </div>
                     <button
                       onClick={() => handleRemoveDisc(disc)}
-                      className="text-slate-400 hover:text-red-600 transition-colors flex-shrink-0"
+                      className="text-slate-400 hover:text-red-600 transition-colors flex-shrink-0 mr-3"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -752,16 +760,24 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                 {availableDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg p-3 gap-3"
+                    className="flex items-center justify-between border border-slate-200 rounded-lg overflow-hidden"
                   >
                     <div className="flex items-center gap-3 flex-1">
-                      {disc.color && (
+                      {disc.photo_url ? (
+                        <div className="w-16 h-16 flex-shrink-0 bg-slate-100">
+                          <img
+                            src={disc.photo_url}
+                            alt={disc.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : disc.color ? (
                         <div
-                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"
+                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0 ml-3"
                           style={{ backgroundColor: disc.color }}
                           title={disc.color}
                         />
-                      )}
+                      ) : null}
                       <div className="flex-1">
                         <div className="font-medium text-slate-800">{disc.name}</div>
                         <div className="text-xs text-slate-600">
@@ -772,7 +788,7 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                     </div>
                     <button
                       onClick={() => handleAddDisc(disc)}
-                      className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0"
+                      className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0 mr-3"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

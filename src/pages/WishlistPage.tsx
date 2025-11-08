@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Heart, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Heart, ExternalLink, ChevronUp, ChevronDown, X, Loader2 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { WishlistItem, WishlistItemInsert } from '../lib/database.types';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 export function WishlistPage() {
   const { user } = useUser();
@@ -37,7 +38,7 @@ export function WishlistPage() {
     }
   };
 
-  const handleAddItem = async (productName: string, notes: string, productLink: string) => {
+  const handleAddItem = async (productName: string, notes: string, productLink: string, photoUrl: string | null) => {
     if (!user) return;
 
     try {
@@ -50,7 +51,8 @@ export function WishlistPage() {
           product_name: productName.trim(),
           notes: notes.trim() || null,
           product_link: productLink.trim() || null,
-          priority: maxPriority + 1
+          priority: maxPriority + 1,
+          photo_url: photoUrl
         });
 
       if (error) throw error;
@@ -62,15 +64,21 @@ export function WishlistPage() {
     }
   };
 
-  const handleUpdateItem = async (itemId: number, productName: string, notes: string, productLink: string) => {
+  const handleUpdateItem = async (itemId: number, productName: string, notes: string, productLink: string, photoUrl: string | null | undefined) => {
     try {
+      const updateData: any = {
+        product_name: productName.trim(),
+        notes: notes.trim() || null,
+        product_link: productLink.trim() || null
+      };
+
+      if (photoUrl !== undefined) {
+        updateData.photo_url = photoUrl;
+      }
+
       const { error } = await supabase
         .from('wishlist_items')
-        .update({
-          product_name: productName.trim(),
-          notes: notes.trim() || null,
-          product_link: productLink.trim() || null
-        })
+        .update(updateData)
         .eq('item_id', itemId);
 
       if (error) throw error;
@@ -183,9 +191,19 @@ export function WishlistPage() {
             {items.map((item, index) => (
               <div
                 key={item.item_id}
-                className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start">
+                  {item.photo_url && (
+                    <div className="w-32 h-32 flex-shrink-0 bg-slate-100">
+                      <img
+                        src={item.photo_url}
+                        alt={item.product_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-start gap-4 flex-1 p-5">
                   <div className="flex flex-col gap-2 pt-1">
                     <button
                       onClick={() => handleMovePriority(item.item_id, 'up')}
@@ -257,6 +275,7 @@ export function WishlistPage() {
                       Prioritet #{index + 1}
                     </div>
                   </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -275,7 +294,7 @@ export function WishlistPage() {
         <WishlistModal
           item={editingItem}
           onClose={() => setEditingItem(null)}
-          onSave={(name, notes, link) => handleUpdateItem(editingItem.item_id, name, notes, link)}
+          onSave={(name, notes, link, photoUrl) => handleUpdateItem(editingItem.item_id, name, notes, link, photoUrl)}
         />
       )}
     </div>
@@ -285,13 +304,16 @@ export function WishlistPage() {
 interface WishlistModalProps {
   item?: WishlistItem;
   onClose: () => void;
-  onSave: (productName: string, notes: string, productLink: string) => Promise<void>;
+  onSave: (productName: string, notes: string, productLink: string, photoUrl: string | null | undefined) => Promise<void>;
 }
 
 function WishlistModal({ item, onClose, onSave }: WishlistModalProps) {
   const [productName, setProductName] = useState(item?.product_name || '');
   const [notes, setNotes] = useState(item?.notes || '');
   const [productLink, setProductLink] = useState(item?.product_link || '');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(item?.photo_url || null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -306,7 +328,25 @@ function WishlistModal({ item, onClose, onSave }: WishlistModalProps) {
 
     try {
       setIsSubmitting(true);
-      await onSave(productName, notes, productLink);
+
+      let photoUrl: string | null | undefined = undefined;
+      if (photoFile) {
+        setIsUploadingPhoto(true);
+        try {
+          photoUrl = await uploadToCloudinary(photoFile);
+        } catch (uploadError) {
+          setError('Kunne ikke uploade billede. Prøv igen.');
+          console.error(uploadError);
+          setIsSubmitting(false);
+          setIsUploadingPhoto(false);
+          return;
+        }
+        setIsUploadingPhoto(false);
+      } else if (!item && !photoPreview) {
+        photoUrl = null;
+      }
+
+      await onSave(productName, notes, productLink, photoUrl);
     } catch (err) {
       setError('Kunne ikke gemme produkt. Prøv igen.');
       console.error(err);
@@ -351,6 +391,75 @@ function WishlistModal({ item, onClose, onSave }: WishlistModalProps) {
               placeholder="f.eks. Star plastic, 175g"
               disabled={isSubmitting}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Foto af produkt (valgfrit)
+            </label>
+            {photoPreview && !photoFile && (
+              <div className="mb-2 relative">
+                <img
+                  src={photoPreview}
+                  alt="Current product photo"
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoPreview(null);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setPhotoFile(file);
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setPhotoPreview(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              disabled={isSubmitting}
+            />
+            {photoFile && photoPreview && (
+              <div className="mt-2 relative">
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview(item?.photo_url || null);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            {isUploadingPhoto && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Uploader billede...</span>
+              </div>
+            )}
           </div>
 
           <div>
