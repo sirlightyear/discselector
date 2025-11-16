@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Package, ShoppingBag, Search } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert, Bag } from '../lib/database.types';
@@ -22,6 +22,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [editingDisc, setEditingDisc] = useState<Disc | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [viewMode, setViewMode] = useState<'detailed' | 'compact'>('detailed');
 
   useEffect(() => {
     if (user) {
@@ -208,6 +209,30 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                 <option value="type">Type</option>
                 <option value="most_used">Mest brugt</option>
               </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode('detailed')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'detailed'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                  title="Detaljeret visning"
+                >
+                  <Grid3x3 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('compact')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'compact'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                  title="Kompakt visning"
+                >
+                  <List className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -244,6 +269,54 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             >
               Ryd søgning
             </button>
+          </div>
+        ) : viewMode === 'compact' ? (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="divide-y divide-slate-200">
+              {filteredAndSortedDiscs.map((disc) => (
+                <div
+                  key={disc.disc_id}
+                  className="p-3 hover:bg-slate-50 transition-colors flex items-center gap-3"
+                >
+                  {disc.color && (
+                    <div
+                      className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"
+                      style={{ backgroundColor: disc.color }}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-800 truncate">{disc.name}</div>
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      {disc.disc_type && (
+                        <span className="text-slate-600">{disc.disc_type}</span>
+                      )}
+                      {disc.is_glow && (
+                        <span className="text-green-700 font-medium">Glow</span>
+                      )}
+                      <span className="text-slate-500">
+                        {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setEditingDisc(disc)}
+                      className="text-slate-400 hover:text-blue-600 transition-colors"
+                      title="Rediger"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteDisc(disc.disc_id)}
+                      className="text-slate-400 hover:text-red-600 transition-colors"
+                      title="Slet"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">

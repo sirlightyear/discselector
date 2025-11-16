@@ -364,6 +364,11 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           {disc.weight && (
                             <span className="text-xs text-slate-500">{disc.weight}g</span>
                           )}
+                          {disc.is_glow && (
+                            <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                              Glow
+                            </span>
+                          )}
                           <div className="flex items-center gap-1">
                             <div
                               className={`w-2.5 h-2.5 rounded-full ${getStabilityColor(
