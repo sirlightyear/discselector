@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft, Link as LinkIcon, Share2, Image as ImageIcon, Settings } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Course, CourseInsert, CourseHole, Disc } from '../lib/database.types';
+import { PhotoUpload } from '../components/PhotoUpload';
 
 type CourseWithHoleCount = Course & { holeCount: number };
 type HoleWithDiscs = CourseHole & { disc_colors: string[] };
@@ -47,7 +48,7 @@ export function CoursesPage() {
     }
   };
 
-  const handleAddCourse = async (name: string, description: string, holeCount: number) => {
+  const handleAddCourse = async (data: CourseFormData) => {
     if (!user) return;
 
     try {
@@ -55,18 +56,25 @@ export function CoursesPage() {
         .from('courses')
         .insert({
           user_id: user.user_id,
-          name: name.trim(),
-          description: description.trim() || null,
-          hole_count: holeCount
+          name: data.name.trim(),
+          description: data.description.trim() || null,
+          hole_count: data.holeCount,
+          photo_urls: data.photoUrls || [],
+          link1: data.link1 || null,
+          link2: data.link2 || null,
+          is_shared: data.isShared || false,
+          share_photos: data.sharePhotos || false,
+          share_notes: data.shareNotes || false
         })
         .select()
         .single();
 
       if (courseError) throw courseError;
 
-      const holes = Array.from({ length: holeCount }, (_, i) => ({
+      const holes = Array.from({ length: data.holeCount }, (_, i) => ({
         course_id: newCourse.course_id,
         hole_number: i + 1,
+        position: i,
         notes: null
       }));
 
@@ -84,13 +92,19 @@ export function CoursesPage() {
     }
   };
 
-  const handleUpdateCourse = async (courseId: number, name: string, description: string) => {
+  const handleUpdateCourse = async (courseId: number, data: CourseFormData) => {
     try {
       const { error } = await supabase
         .from('courses')
         .update({
-          name: name.trim(),
-          description: description.trim() || null
+          name: data.name.trim(),
+          description: data.description.trim() || null,
+          photo_urls: data.photoUrls || [],
+          link1: data.link1 || null,
+          link2: data.link2 || null,
+          is_shared: data.isShared || false,
+          share_photos: data.sharePhotos || false,
+          share_notes: data.shareNotes || false
         })
         .eq('course_id', courseId);
 
@@ -232,7 +246,7 @@ export function CoursesPage() {
         <CourseModal
           course={editingCourse}
           onClose={() => setEditingCourse(null)}
-          onSave={(name, desc) => handleUpdateCourse(editingCourse.course_id, name, desc)}
+          onSave={(data) => handleUpdateCourse(editingCourse.course_id, data)}
         />
       )}
     </div>
@@ -242,13 +256,32 @@ export function CoursesPage() {
 interface CourseModalProps {
   course?: Course;
   onClose: () => void;
-  onSave: (name: string, description: string, holeCount: number) => Promise<void>;
+  onSave: (data: CourseFormData) => Promise<void>;
+}
+
+interface CourseFormData {
+  name: string;
+  description: string;
+  holeCount: number;
+  photoUrls?: string[];
+  link1?: string;
+  link2?: string;
+  isShared?: boolean;
+  sharePhotos?: boolean;
+  shareNotes?: boolean;
 }
 
 function CourseModal({ course, onClose, onSave }: CourseModalProps) {
   const [name, setName] = useState(course?.name || '');
   const [description, setDescription] = useState(course?.description || '');
   const [holeCount, setHoleCount] = useState(course?.hole_count || 18);
+  const [photos, setPhotos] = useState<string[]>(course?.photo_urls || []);
+  const [link1, setLink1] = useState(course?.link1 || '');
+  const [link2, setLink2] = useState(course?.link2 || '');
+  const [isShared, setIsShared] = useState(course?.is_shared || false);
+  const [sharePhotos, setSharePhotos] = useState(course?.share_photos || false);
+  const [shareNotes, setShareNotes] = useState(course?.share_notes || false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -268,7 +301,17 @@ function CourseModal({ course, onClose, onSave }: CourseModalProps) {
 
     try {
       setIsSubmitting(true);
-      await onSave(name, description, holeCount);
+      await onSave({
+        name,
+        description,
+        holeCount,
+        photoUrls: photos,
+        link1: link1.trim() || undefined,
+        link2: link2.trim() || undefined,
+        isShared,
+        sharePhotos,
+        shareNotes
+      });
     } catch (err) {
       setError('Kunne ikke gemme bane. Prøv igen.');
       console.error(err);
@@ -278,15 +321,15 @@ function CourseModal({ course, onClose, onSave }: CourseModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
         <div className="border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">
             {course ? 'Rediger bane' : 'Ny bane'}
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Navn *
@@ -331,6 +374,98 @@ function CourseModal({ course, onClose, onSave }: CourseModalProps) {
               />
             </div>
           )}
+
+          <PhotoUpload photos={photos} onPhotosChange={setPhotos} />
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Link 1 (f.eks. UDisc)
+            </label>
+            <input
+              type="url"
+              value={link1}
+              onChange={(e) => setLink1(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              placeholder="https://udisc.com/courses/..."
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Link 2 (f.eks. DiscGolfMetrix)
+            </label>
+            <input
+              type="url"
+              value={link2}
+              onChange={(e) => setLink2(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              placeholder="https://discgolfmetrix.com/..."
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="border-t border-slate-200 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+            >
+              <Settings className="w-4 h-4" />
+              Delingsindstillinger
+              <ChevronRight className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-4 space-y-3 bg-slate-50 p-4 rounded-lg">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isShared}
+                    onChange={(e) => setIsShared(e.target.checked)}
+                    className="mt-1"
+                    disabled={isSubmitting}
+                  />
+                  <div>
+                    <div className="font-medium text-sm text-slate-800">Del bane med andre</div>
+                    <div className="text-xs text-slate-600">Andre brugere kan bruge denne bane som skabelon</div>
+                  </div>
+                </label>
+
+                {isShared && (
+                  <>
+                    <label className="flex items-start gap-3 cursor-pointer ml-6">
+                      <input
+                        type="checkbox"
+                        checked={sharePhotos}
+                        onChange={(e) => setSharePhotos(e.target.checked)}
+                        className="mt-1"
+                        disabled={isSubmitting}
+                      />
+                      <div>
+                        <div className="font-medium text-sm text-slate-800">Del fotos</div>
+                        <div className="text-xs text-slate-600">Inkluder bane- og hul-fotos</div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 cursor-pointer ml-6">
+                      <input
+                        type="checkbox"
+                        checked={shareNotes}
+                        onChange={(e) => setShareNotes(e.target.checked)}
+                        className="mt-1"
+                        disabled={isSubmitting}
+                      />
+                      <div>
+                        <div className="font-medium text-sm text-slate-800">Del noter</div>
+                        <div className="text-xs text-slate-600">Inkluder hul-noter</div>
+                      </div>
+                    </label>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -466,19 +601,29 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
             <button
               key={hole.hole_id}
               onClick={() => setSelectedHole(hole)}
-              className={`aspect-square rounded-lg border-2 transition-all font-bold text-lg flex flex-col items-center justify-center gap-1 p-2 ${
+              className={`aspect-square rounded-lg border-2 transition-all font-bold text-lg flex flex-col items-center justify-center gap-1 p-2 overflow-hidden relative ${
                 hole.notes || hole.disc_colors.length > 0
-                  ? 'bg-blue-100 border-blue-600 text-blue-800 hover:bg-blue-200'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                  ? 'border-blue-600 hover:border-blue-700'
+                  : 'border-slate-300 hover:border-slate-400'
               }`}
+              style={{
+                backgroundImage: hole.background_photo_url ? `url(${hole.background_photo_url})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
             >
-              <span>{hole.hole_number}</span>
+              {hole.background_photo_url && (
+                <div className="absolute inset-0 bg-black/30" />
+              )}
+              <span className={`relative z-10 ${hole.background_photo_url ? 'text-white text-shadow-lg' : hole.notes || hole.disc_colors.length > 0 ? 'text-blue-800' : 'text-slate-700'}`}>
+                {hole.custom_name || hole.hole_number}
+              </span>
               {hole.disc_colors.length > 0 && (
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5 relative z-10">
                   {hole.disc_colors.slice(0, 2).map((color, idx) => (
                     <div
                       key={idx}
-                      className="w-3 h-3 rounded-full border border-slate-400"
+                      className="w-3 h-3 rounded-full border-2 border-white"
                       style={{ backgroundColor: color }}
                     />
                   ))}
@@ -505,10 +650,16 @@ interface HoleDetailPageProps {
 function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate, onSelectHole }: HoleDetailPageProps) {
   const { user } = useUser();
   const [notes, setNotes] = useState(hole.notes || '');
+  const [customName, setCustomName] = useState(hole.custom_name || '');
+  const [photos, setPhotos] = useState<string[]>(hole.photo_urls || []);
+  const [backgroundPhoto, setBackgroundPhoto] = useState(hole.background_photo_url || '');
+  const [link1, setLink1] = useState(hole.link1 || '');
+  const [link2, setLink2] = useState(hole.link2 || '');
   const [isSaving, setIsSaving] = useState(false);
   const [holeDiscs, setHoleDiscs] = useState<Disc[]>([]);
   const [availableDiscs, setAvailableDiscs] = useState<Disc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -548,12 +699,19 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
     }
   };
 
-  const handleSaveNotes = async () => {
+  const handleSaveHoleData = async () => {
     try {
       setIsSaving(true);
       const { error } = await supabase
         .from('course_holes')
-        .update({ notes: notes.trim() || null })
+        .update({
+          notes: notes.trim() || null,
+          custom_name: customName.trim() || null,
+          photo_urls: photos,
+          background_photo_url: backgroundPhoto || null,
+          link1: link1.trim() || null,
+          link2: link2.trim() || null
+        })
         .eq('hole_id', hole.hole_id);
 
       if (error) throw error;
@@ -563,11 +721,11 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
         .update({ updated_at: new Date().toISOString() })
         .eq('course_id', courseId);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       onUpdate();
     } catch (error) {
-      console.error('Error saving notes:', error);
+      console.error('Error saving hole data:', error);
     } finally {
       setIsSaving(false);
     }
@@ -674,23 +832,127 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Noter
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none resize-none"
-              placeholder="f.eks. Kastet med anhyzer, speed 7"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Tilpasset navn (valgfrit)
+              </label>
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder={`Hul ${hole.hole_number}`}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Noter
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none resize-none"
+                placeholder="f.eks. Kastet med anhyzer, speed 7"
+              />
+            </div>
+
+            <PhotoUpload photos={photos} onPhotosChange={setPhotos} maxPhotos={5} />
+
+            {photos.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Baggrundsfoto (vises på hul-knap)
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setBackgroundPhoto('')}
+                    className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center ${
+                      !backgroundPhoto
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    <span className="text-sm text-slate-600">Ingen</span>
+                  </button>
+                  {photos.map((photo, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setBackgroundPhoto(photo)}
+                      className={`aspect-square rounded-lg border-2 transition-all overflow-hidden ${
+                        backgroundPhoto === photo
+                          ? 'border-blue-600'
+                          : 'border-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Link 1 (f.eks. UDisc layout)
+              </label>
+              <input
+                type="url"
+                value={link1}
+                onChange={(e) => setLink1(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="https://..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Link 2 (f.eks. DiscGolfMetrix)
+              </label>
+              <input
+                type="url"
+                value={link2}
+                onChange={(e) => setLink2(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                placeholder="https://..."
+              />
+            </div>
+
+            {(link1 || link2) && (
+              <div className="flex gap-2">
+                {link1 && (
+                  <a
+                    href={link1}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    Åbn link 1
+                  </a>
+                )}
+                {link2 && (
+                  <a
+                    href={link2}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    Åbn link 2
+                  </a>
+                )}
+              </div>
+            )}
+
             <button
-              onClick={handleSaveNotes}
+              onClick={handleSaveHoleData}
               disabled={isSaving}
-              className="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {isSaving ? 'Gemmer...' : 'Gem noter'}
+              {isSaving ? 'Gemmer...' : 'Gem ændringer'}
             </button>
           </div>
         </div>
