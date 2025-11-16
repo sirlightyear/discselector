@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft, Link as LinkIcon, Share2, Image as ImageIcon, Settings } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft, Link as LinkIcon, Share2, Image as ImageIcon, Settings, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Course, CourseInsert, CourseHole, Disc } from '../lib/database.types';
@@ -506,6 +506,7 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
   const [holes, setHoles] = useState<HoleWithDiscs[]>([]);
   const [selectedHole, setSelectedHole] = useState<CourseHole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isManageMode, setIsManageMode] = useState(false);
 
   useEffect(() => {
     loadHoles();
@@ -518,7 +519,7 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
         .from('course_holes')
         .select('*')
         .eq('course_id', course.course_id)
-        .order('hole_number');
+        .order('position');
 
       if (holesError) throw holesError;
 
@@ -551,6 +552,94 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
     }
   };
 
+  const handleAddHole = async () => {
+    try {
+      const maxPosition = Math.max(...holes.map(h => h.position || 0), -1);
+      const maxHoleNumber = Math.max(...holes.map(h => h.hole_number), 0);
+
+      const { error } = await supabase
+        .from('course_holes')
+        .insert({
+          course_id: course.course_id,
+          hole_number: maxHoleNumber + 1,
+          position: maxPosition + 1,
+          notes: null
+        });
+
+      if (error) throw error;
+
+      await supabase
+        .from('courses')
+        .update({
+          hole_count: holes.length + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('course_id', course.course_id);
+
+      await loadHoles();
+    } catch (error) {
+      console.error('Error adding hole:', error);
+    }
+  };
+
+  const handleDeleteHole = async (holeId: number) => {
+    if (!confirm('Er du sikker på at du vil slette dette hul? Alle tilknyttede discs vil blive fjernet.')) return;
+
+    try {
+      const { error } = await supabase
+        .from('course_holes')
+        .delete()
+        .eq('hole_id', holeId);
+
+      if (error) throw error;
+
+      await supabase
+        .from('courses')
+        .update({
+          hole_count: holes.length - 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('course_id', course.course_id);
+
+      await loadHoles();
+    } catch (error) {
+      console.error('Error deleting hole:', error);
+    }
+  };
+
+  const handleMoveHole = async (index: number, direction: 'up' | 'down') => {
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === holes.length - 1)) {
+      return;
+    }
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const newHoles = [...holes];
+    [newHoles[index], newHoles[newIndex]] = [newHoles[newIndex], newHoles[index]];
+
+    try {
+      const updates = newHoles.map((hole, idx) => ({
+        hole_id: hole.hole_id,
+        position: idx
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('course_holes')
+          .update({ position: update.position })
+          .eq('hole_id', update.hole_id);
+      }
+
+      await supabase
+        .from('courses')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('course_id', course.course_id);
+
+      await loadHoles();
+    } catch (error) {
+      console.error('Error moving hole:', error);
+    }
+  };
+
   if (selectedHole) {
     return (
       <HoleDetailPage
@@ -577,27 +666,129 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={onBack}
-              className="text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">{course.name}</h1>
-              {course.description && (
-                <p className="text-sm text-slate-600">{course.description}</p>
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onBack}
+                className="text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800">{course.name}</h1>
+                {course.description && (
+                  <p className="text-sm text-slate-600">{course.description}</p>
+                )}
+              </div>
             </div>
+            <button
+              onClick={() => setIsManageMode(!isManageMode)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                isManageMode
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              {isManageMode ? 'Færdig' : 'Administrer huller'}
+            </button>
           </div>
-          <div className="text-sm text-slate-600">
-            {course.hole_count} huller
+          <div className="flex items-center justify-between text-sm text-slate-600">
+            <span>{holes.length} huller</span>
+            {isManageMode && (
+              <button
+                onClick={handleAddHole}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                Tilføj hul
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-          {holes.map((hole) => (
+        {isManageMode ? (
+          <div className="space-y-2">
+            {holes.map((hole, index) => (
+              <div
+                key={hole.hole_id}
+                className="bg-white rounded-lg shadow-md p-4 flex items-center gap-3"
+              >
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => handleMoveHole(index, 'up')}
+                    disabled={index === 0}
+                    className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleMoveHole(index, 'down')}
+                    disabled={index === holes.length - 1}
+                    className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                </div>
+                <div
+                  className="w-16 h-16 rounded-lg border-2 border-slate-300 flex items-center justify-center font-bold text-lg flex-shrink-0 relative overflow-hidden"
+                  style={{
+                    backgroundImage: hole.background_photo_url ? `url(${hole.background_photo_url})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  {hole.background_photo_url && (
+                    <div className="absolute inset-0 bg-black/30" />
+                  )}
+                  <span className={`relative z-10 ${hole.background_photo_url ? 'text-white text-shadow-lg' : 'text-slate-700'}`}>
+                    {hole.custom_name || hole.hole_number}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-slate-800">
+                    {hole.custom_name || `Hul ${hole.hole_number}`}
+                  </div>
+                  {hole.notes && (
+                    <div className="text-sm text-slate-600 truncate">{hole.notes}</div>
+                  )}
+                  {hole.disc_colors.length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {hole.disc_colors.slice(0, 3).map((color, idx) => (
+                        <div
+                          key={idx}
+                          className="w-3 h-3 rounded-full border border-slate-400"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                      {hole.disc_colors.length > 3 && (
+                        <span className="text-xs text-slate-500">+{hole.disc_colors.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedHole(hole)}
+                    className="text-slate-600 hover:text-blue-600 transition-colors"
+                    title="Rediger"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteHole(hole.hole_id)}
+                    className="text-slate-600 hover:text-red-600 transition-colors"
+                    title="Slet"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {holes.map((hole) => (
             <button
               key={hole.hole_id}
               onClick={() => setSelectedHole(hole)}
@@ -631,7 +822,8 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
               )}
             </button>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
