@@ -107,16 +107,21 @@ export function FilterableCoverageChart({
               onClick={() => onSpeedRangeClick(range.label)}
               className={`w-full flex items-center gap-3 group ${
                 range.count === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              } ${
+                range.isSelected ? 'bg-blue-50 border-2 border-blue-500 rounded-lg p-2 -m-2' : ''
               }`}
               disabled={range.count === 0}
             >
-              <div className="w-16 text-xs text-slate-600 font-medium">
+              <div className={`w-16 text-xs font-medium ${
+                range.isSelected ? 'text-blue-700 font-bold' : 'text-slate-600'
+              }`}>
                 {range.label}
+                {range.isSelected && <span className="ml-1">✓</span>}
               </div>
               <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                 <div
                   className={`${range.color} h-full rounded-full transition-all duration-300 flex items-center justify-end px-2 ${
-                    range.isSelected ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                    range.isSelected ? 'brightness-110 shadow-lg' : ''
                   } ${range.count > 0 ? 'group-hover:brightness-110' : ''}`}
                   style={{ width: `${(range.count / maxSpeedCount) * 100}%` }}
                 >
@@ -151,16 +156,21 @@ export function FilterableCoverageChart({
               onClick={() => onStabilityCategoryClick(cat.label)}
               className={`w-full flex items-center gap-3 group ${
                 cat.count === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              } ${
+                cat.isSelected ? 'bg-blue-50 border-2 border-blue-500 rounded-lg p-2 -m-2' : ''
               }`}
               disabled={cat.count === 0}
             >
-              <div className="w-32 text-xs text-slate-600 font-medium">
+              <div className={`w-32 text-xs font-medium ${
+                cat.isSelected ? 'text-blue-700 font-bold' : 'text-slate-600'
+              }`}>
                 {cat.label}
+                {cat.isSelected && <span className="ml-1">✓</span>}
               </div>
               <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                 <div
                   className={`${cat.color} h-full rounded-full transition-all duration-300 flex items-center justify-end px-2 ${
-                    cat.isSelected ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                    cat.isSelected ? 'brightness-110 shadow-lg' : ''
                   } ${cat.count > 0 ? 'group-hover:brightness-110' : ''}`}
                   style={{ width: `${(cat.count / maxStabilityCount) * 100}%` }}
                 >
@@ -193,15 +203,20 @@ export function FilterableCoverageChart({
             <button
               key={mfr.name}
               onClick={() => onManufacturerClick(mfr.name)}
-              className="w-full flex items-center gap-3 group cursor-pointer"
+              className={`w-full flex items-center gap-3 group cursor-pointer ${
+                mfr.isSelected ? 'bg-blue-50 border-2 border-blue-500 rounded-lg p-2 -m-2' : ''
+              }`}
             >
-              <div className="w-32 text-xs text-slate-600 font-medium truncate text-left">
+              <div className={`w-32 text-xs font-medium truncate text-left ${
+                mfr.isSelected ? 'text-blue-700 font-bold' : 'text-slate-600'
+              }`}>
                 {mfr.name}
+                {mfr.isSelected && <span className="ml-1">✓</span>}
               </div>
               <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                 <div
-                  className={`${mfr.color} h-full rounded-full transition-all duration-300 flex items-center justify-end px-2 group-hover:brightness-110 ${
-                    mfr.isSelected ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                  className={`${mfr.color} h-full rounded-full transition-all duration-300 flex items-center justify-end px-2 ${
+                    mfr.isSelected ? 'brightness-110 shadow-lg' : 'group-hover:brightness-110'
                   }`}
                   style={{ width: `${(mfr.count / maxManufacturerCount) * 100}%` }}
                 >
