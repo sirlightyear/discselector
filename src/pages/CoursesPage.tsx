@@ -4,6 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Course, CourseInsert, CourseHole, Disc } from '../lib/database.types';
 import { PhotoUpload } from '../components/PhotoUpload';
+import { ShareButton } from '../components/ShareButton';
 
 type CourseWithHoleCount = Course & { holeCount: number };
 type HoleWithDiscs = CourseHole & { disc_colors: string[] };
@@ -211,6 +212,13 @@ export function CoursesPage() {
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <ShareButton
+                        type="course"
+                        itemId={course.course_id}
+                        isShared={course.is_shared || false}
+                        shareToken={String(course.course_id)}
+                        onUpdate={loadCourses}
+                      />
                       <button
                         onClick={() => setEditingCourse(course)}
                         className="text-slate-600 hover:text-blue-600 transition-colors"

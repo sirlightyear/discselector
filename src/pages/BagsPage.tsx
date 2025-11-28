@@ -4,6 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Bag } from '../lib/database.types';
 import { BagBuilderPage } from './BagBuilderPage';
+import { ShareButton } from '../components/ShareButton';
 
 type BagWithCount = Bag & { discCount: number };
 
@@ -233,6 +234,13 @@ export function BagsPage() {
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <ShareButton
+                      type="bag"
+                      itemId={bag.bag_id}
+                      isShared={bag.is_public || false}
+                      shareToken={bag.share_token}
+                      onUpdate={loadBags}
+                    />
                     <button
                       onClick={() => handleDuplicateBag(bag)}
                       className="text-slate-600 hover:text-green-600 transition-colors"

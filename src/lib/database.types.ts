@@ -107,6 +107,8 @@ export interface Database {
           description: string | null;
           created_at: string | null;
           updated_at: string | null;
+          share_token: string | null;
+          is_public: boolean | null;
         };
         Insert: {
           user_id: string;
@@ -114,6 +116,8 @@ export interface Database {
           description?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
+          share_token?: string | null;
+          is_public?: boolean | null;
         };
         Update: {
           user_id?: string;
@@ -121,6 +125,8 @@ export interface Database {
           description?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
+          share_token?: string | null;
+          is_public?: boolean | null;
         };
       };
       bag_discs: {
@@ -263,6 +269,8 @@ export interface Database {
           created_at: string | null;
           updated_at: string | null;
           startup_page: 'calculator' | 'collection' | 'bags' | 'courses' | 'wishlist' | 'links' | 'settings' | null;
+          share_token: string | null;
+          share_collection: boolean | null;
         };
         Insert: {
           user_id: string;
@@ -273,6 +281,8 @@ export interface Database {
           created_at?: string | null;
           updated_at?: string | null;
           startup_page?: 'calculator' | 'collection' | 'bags' | 'courses' | 'wishlist' | 'links' | 'settings' | null;
+          share_token?: string | null;
+          share_collection?: boolean | null;
         };
         Update: {
           user_id?: string;
@@ -283,6 +293,8 @@ export interface Database {
           created_at?: string | null;
           updated_at?: string | null;
           startup_page?: 'calculator' | 'collection' | 'bags' | 'courses' | 'wishlist' | 'links' | 'settings' | null;
+          share_token?: string | null;
+          share_collection?: boolean | null;
         };
       };
       wishlist_items: {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { LoginPage } from './pages/LoginPage';
 import { CalculatorPage } from './pages/CalculatorPage';
@@ -8,6 +9,9 @@ import { CoursesPage } from './pages/CoursesPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LinksPage } from './pages/LinksPage';
+import { SharedBagPage } from './pages/SharedBagPage';
+import { SharedCoursePage } from './pages/SharedCoursePage';
+import { SharedCollectionPage } from './pages/SharedCollectionPage';
 import { Navigation } from './components/Navigation';
 import { Header } from './components/Header';
 import { supabase } from './lib/supabase';
@@ -81,9 +85,16 @@ function AppContent() {
 
 function App() {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <BrowserRouter>
+      <UserProvider>
+        <Routes>
+          <Route path="/share/bag" element={<SharedBagPage />} />
+          <Route path="/share/course" element={<SharedCoursePage />} />
+          <Route path="/share/collection" element={<SharedCollectionPage />} />
+          <Route path="*" element={<AppContent />} />
+        </Routes>
+      </UserProvider>
+    </BrowserRouter>
   );
 }
 
