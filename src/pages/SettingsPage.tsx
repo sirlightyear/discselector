@@ -4,7 +4,6 @@ import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { UserSettings, UserSettingsInsert } from '../lib/database.types';
 import { PageType } from '../App';
-import { ShareButton } from '../components/ShareButton';
 
 const PAGE_OPTIONS: { value: PageType; label: string }[] = [
   { value: 'calculator', label: 'Beregner' },
@@ -215,29 +214,6 @@ export function SettingsPage() {
               <Save className="w-4 h-4" />
               Gem profil
             </button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Deling</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-slate-800">Del din samling</div>
-                <div className="text-sm text-slate-600">
-                  Gør din disc samling offentligt tilgængelig via et link
-                </div>
-              </div>
-              {user && (
-                <ShareButton
-                  type="collection"
-                  userId={user.user_id}
-                  isShared={settings?.share_collection || false}
-                  shareToken={settings?.share_token}
-                  onUpdate={loadSettings}
-                />
-              )}
-            </div>
           </div>
         </div>
 

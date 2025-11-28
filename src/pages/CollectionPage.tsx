@@ -2,9 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
-import { Disc, DiscInsert, Bag } from '../lib/database.types';
+import { Disc, DiscInsert, Bag, UserSettings } from '../lib/database.types';
 import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
+import { ShareButton } from '../components/ShareButton';
+import { FilterableCoverageChart } from '../components/FilterableCoverageChart';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 type DiscWithBags = Disc & { bags: Bag[] };
@@ -23,12 +25,32 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<'detailed' | 'compact'>('detailed');
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [selectedSpeedRanges, setSelectedSpeedRanges] = useState<string[]>([]);
+  const [selectedStabilityCategories, setSelectedStabilityCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
       loadDiscs();
+      loadSettings();
     }
   }, [user]);
+
+  const loadSettings = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .maybeSingle();
+
+      setSettings(data);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
 
   const loadDiscs = async () => {
     if (!user) return;
@@ -122,6 +144,31 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   };
 
 
+  const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
+  const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
+  const getFade = (disc: Disc) => disc.personal_fade ?? disc.fade;
+
+  const getStabilityScore = (disc: Disc) => {
+    return getTurn(disc) + getFade(disc);
+  };
+
+  const getSpeedRange = (speed: number) => {
+    if (speed >= 1 && speed <= 3) return '1-3';
+    if (speed >= 4 && speed <= 6) return '4-6';
+    if (speed >= 7 && speed <= 9) return '7-9';
+    if (speed >= 10 && speed <= 12) return '10-12';
+    if (speed >= 13 && speed <= 14) return '13-14';
+    return '';
+  };
+
+  const getStabilityCategoryName = (score: number) => {
+    if (score < -2) return 'Meget understabil';
+    if (score >= -2 && score < -0.1) return 'Understabil';
+    if (score >= -0.1 && score < 1) return 'Neutral';
+    if (score >= 1 && score < 2.5) return 'Overstabil';
+    return 'Meget overstabil';
+  };
+
   const filteredAndSortedDiscs = useMemo(() => {
     let filtered = discs;
 
@@ -134,6 +181,20 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
         disc.disc_type?.toLowerCase().includes(query) ||
         disc.note?.toLowerCase().includes(query)
       );
+    }
+
+    if (selectedSpeedRanges.length > 0) {
+      filtered = filtered.filter(disc => {
+        const speedRange = getSpeedRange(getSpeed(disc));
+        return selectedSpeedRanges.includes(speedRange);
+      });
+    }
+
+    if (selectedStabilityCategories.length > 0) {
+      filtered = filtered.filter(disc => {
+        const category = getStabilityCategoryName(getStabilityScore(disc));
+        return selectedStabilityCategories.includes(category);
+      });
     }
 
     const sorted = [...filtered].sort((a, b) => {
@@ -154,7 +215,23 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     });
 
     return sorted;
-  }, [discs, searchQuery, sortBy]);
+  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories]);
+
+  const handleSpeedRangeClick = (range: string) => {
+    setSelectedSpeedRanges(prev =>
+      prev.includes(range)
+        ? prev.filter(r => r !== range)
+        : [...prev, range]
+    );
+  };
+
+  const handleStabilityCategoryClick = (category: string) => {
+    setSelectedStabilityCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -178,13 +255,24 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Tilføj disc
-            </button>
+            <div className="flex gap-2">
+              {user && (
+                <ShareButton
+                  type="collection"
+                  userId={user.user_id}
+                  isShared={settings?.share_collection || false}
+                  shareToken={settings?.share_token}
+                  onUpdate={loadSettings}
+                />
+              )}
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Tilføj disc
+              </button>
+            </div>
           </div>
 
           {discs.length > 0 && (
@@ -236,6 +324,19 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             </div>
           )}
         </div>
+
+        {discs.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">Samlings Oversigt</h2>
+            <FilterableCoverageChart
+              discs={discs}
+              selectedSpeedRanges={selectedSpeedRanges}
+              selectedStabilityCategories={selectedStabilityCategories}
+              onSpeedRangeClick={handleSpeedRangeClick}
+              onStabilityCategoryClick={handleStabilityCategoryClick}
+            />
+          </div>
+        )}
 
         {discs.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
