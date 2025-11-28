@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Disc as DiscIcon, AlertCircle } from 'lucide-react';
+import { Disc as DiscIcon, AlertCircle, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Disc } from '../lib/database.types';
+import { FilterableCoverageChart } from '../components/FilterableCoverageChart';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 export function SharedCollectionPage() {
@@ -12,6 +13,10 @@ export function SharedCollectionPage() {
   const [ownerName, setOwnerName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpeedRanges, setSelectedSpeedRanges] = useState<string[]>([]);
+  const [selectedStabilityCategories, setSelectedStabilityCategories] = useState<string[]>([]);
+  const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
 
   useEffect(() => {
     if (token) {
@@ -65,6 +70,93 @@ export function SharedCollectionPage() {
     }
   };
 
+  const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
+  const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
+  const getFade = (disc: Disc) => disc.personal_fade ?? disc.fade;
+
+  const getStabilityScore = (disc: Disc) => {
+    return getTurn(disc) + getFade(disc);
+  };
+
+  const getSpeedRange = (speed: number) => {
+    if (speed >= 1 && speed <= 3) return '1-3';
+    if (speed >= 4 && speed <= 6) return '4-6';
+    if (speed >= 7 && speed <= 9) return '7-9';
+    if (speed >= 10 && speed <= 12) return '10-12';
+    if (speed >= 13 && speed <= 14) return '13-14';
+    return '';
+  };
+
+  const getStabilityCategoryName = (score: number) => {
+    if (score < -2) return 'Meget understabil';
+    if (score >= -2 && score < -0.1) return 'Understabil';
+    if (score >= -0.1 && score < 1) return 'Neutral';
+    if (score >= 1 && score < 2.5) return 'Overstabil';
+    return 'Meget overstabil';
+  };
+
+  const filteredDiscs = useMemo(() => {
+    let filtered = discs;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = discs.filter(disc =>
+        disc.name.toLowerCase().includes(query) ||
+        disc.manufacturer?.toLowerCase().includes(query) ||
+        disc.plastic?.toLowerCase().includes(query) ||
+        disc.disc_type?.toLowerCase().includes(query) ||
+        disc.note?.toLowerCase().includes(query)
+      );
+    }
+
+    if (selectedSpeedRanges.length > 0) {
+      filtered = filtered.filter(disc => {
+        const speedRange = getSpeedRange(getSpeed(disc));
+        return selectedSpeedRanges.includes(speedRange);
+      });
+    }
+
+    if (selectedStabilityCategories.length > 0) {
+      filtered = filtered.filter(disc => {
+        const category = getStabilityCategoryName(getStabilityScore(disc));
+        return selectedStabilityCategories.includes(category);
+      });
+    }
+
+    if (selectedManufacturers.length > 0) {
+      filtered = filtered.filter(disc => {
+        const mfr = disc.manufacturer || 'Ukendt';
+        return selectedManufacturers.includes(mfr);
+      });
+    }
+
+    return filtered;
+  }, [discs, searchQuery, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers]);
+
+  const handleSpeedRangeClick = (range: string) => {
+    setSelectedSpeedRanges(prev =>
+      prev.includes(range)
+        ? prev.filter(r => r !== range)
+        : [...prev, range]
+    );
+  };
+
+  const handleStabilityCategoryClick = (category: string) => {
+    setSelectedStabilityCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleManufacturerClick = (manufacturer: string) => {
+    setSelectedManufacturers(prev =>
+      prev.includes(manufacturer)
+        ? prev.filter(m => m !== manufacturer)
+        : [...prev, manufacturer]
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200 flex items-center justify-center">
@@ -97,10 +189,38 @@ export function SharedCollectionPage() {
               {ownerName}s Disc Samling
             </h1>
           </div>
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-slate-500 mb-4">
             {discs.length} discs i samlingen (Kun visning)
           </div>
+
+          {discs.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Søg efter navn, producent, plastik..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+              />
+            </div>
+          )}
         </div>
+
+        {discs.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">Samlings Oversigt</h2>
+            <FilterableCoverageChart
+              discs={discs}
+              selectedSpeedRanges={selectedSpeedRanges}
+              selectedStabilityCategories={selectedStabilityCategories}
+              selectedManufacturers={selectedManufacturers}
+              onSpeedRangeClick={handleSpeedRangeClick}
+              onStabilityCategoryClick={handleStabilityCategoryClick}
+              onManufacturerClick={handleManufacturerClick}
+            />
+          </div>
+        )}
 
         {discs.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -112,9 +232,30 @@ export function SharedCollectionPage() {
               Denne samling er tom
             </p>
           </div>
+        ) : filteredDiscs.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">
+              Ingen discs matcher søgningen
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Prøv at søge efter noget andet eller fjern filtre
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedSpeedRanges([]);
+                setSelectedStabilityCategories([]);
+                setSelectedManufacturers([]);
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ryd alle filtre
+            </button>
+          </div>
         ) : (
           <div className="grid gap-3">
-            {discs.map((disc) => (
+            {filteredDiscs.map((disc) => (
               <div
                 key={disc.disc_id}
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all"

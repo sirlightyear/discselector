@@ -4,16 +4,20 @@ interface FilterableCoverageChartProps {
   discs: Disc[];
   selectedSpeedRanges: string[];
   selectedStabilityCategories: string[];
+  selectedManufacturers: string[];
   onSpeedRangeClick: (range: string) => void;
   onStabilityCategoryClick: (category: string) => void;
+  onManufacturerClick: (manufacturer: string) => void;
 }
 
 export function FilterableCoverageChart({
   discs,
   selectedSpeedRanges,
   selectedStabilityCategories,
+  selectedManufacturers,
   onSpeedRangeClick,
-  onStabilityCategoryClick
+  onStabilityCategoryClick,
+  onManufacturerClick
 }: FilterableCoverageChartProps) {
   const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
   const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
@@ -65,8 +69,25 @@ export function FilterableCoverageChart({
     isSelected: selectedStabilityCategories.includes(cat.label)
   }));
 
+  const manufacturerCounts = discs
+    .reduce((acc, disc) => {
+      const mfr = disc.manufacturer || 'Ukendt';
+      acc[mfr] = (acc[mfr] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const sortedManufacturers = Object.entries(manufacturerCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({
+      name,
+      count,
+      isSelected: selectedManufacturers.includes(name),
+      color: 'bg-purple-500'
+    }));
+
   const maxSpeedCount = Math.max(...speedCounts.map(s => s.count), 1);
   const maxStabilityCount = Math.max(...stabilityCounts.map(s => s.count), 1);
+  const maxManufacturerCount = Math.max(...sortedManufacturers.map(m => m.count), 1);
 
   return (
     <div className="space-y-8">
@@ -155,6 +176,45 @@ export function FilterableCoverageChart({
         </div>
         <div className="mt-3 text-xs text-slate-500">
           {selectedStabilityCategories.length > 0 ? 'Klik igen for at fjerne filter' : 'Klik for at filtrere'}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">
+          Producent-fordeling
+          {selectedManufacturers.length > 0 && (
+            <span className="ml-2 text-xs font-normal text-blue-600">
+              ({selectedManufacturers.length} filter{selectedManufacturers.length !== 1 ? 'e' : ''})
+            </span>
+          )}
+        </h3>
+        <div className="space-y-2">
+          {sortedManufacturers.map((mfr) => (
+            <button
+              key={mfr.name}
+              onClick={() => onManufacturerClick(mfr.name)}
+              className="w-full flex items-center gap-3 group cursor-pointer"
+            >
+              <div className="w-32 text-xs text-slate-600 font-medium truncate text-left">
+                {mfr.name}
+              </div>
+              <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                <div
+                  className={`${mfr.color} h-full rounded-full transition-all duration-300 flex items-center justify-end px-2 group-hover:brightness-110 ${
+                    mfr.isSelected ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                  }`}
+                  style={{ width: `${(mfr.count / maxManufacturerCount) * 100}%` }}
+                >
+                  <span className="text-xs font-semibold text-white">
+                    {mfr.count}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 text-xs text-slate-500">
+          {selectedManufacturers.length > 0 ? 'Klik igen for at fjerne filter' : 'Klik for at filtrere'}
         </div>
       </div>
     </div>

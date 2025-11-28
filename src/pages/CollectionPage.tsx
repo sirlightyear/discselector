@@ -28,6 +28,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [selectedSpeedRanges, setSelectedSpeedRanges] = useState<string[]>([]);
   const [selectedStabilityCategories, setSelectedStabilityCategories] = useState<string[]>([]);
+  const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -197,6 +198,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
       });
     }
 
+    if (selectedManufacturers.length > 0) {
+      filtered = filtered.filter(disc => {
+        const mfr = disc.manufacturer || 'Ukendt';
+        return selectedManufacturers.includes(mfr);
+      });
+    }
+
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -215,7 +223,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     });
 
     return sorted;
-  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories]);
+  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers]);
 
   const handleSpeedRangeClick = (range: string) => {
     setSelectedSpeedRanges(prev =>
@@ -230,6 +238,14 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
       prev.includes(category)
         ? prev.filter(c => c !== category)
         : [...prev, category]
+    );
+  };
+
+  const handleManufacturerClick = (manufacturer: string) => {
+    setSelectedManufacturers(prev =>
+      prev.includes(manufacturer)
+        ? prev.filter(m => m !== manufacturer)
+        : [...prev, manufacturer]
     );
   };
 
@@ -332,8 +348,10 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
               discs={discs}
               selectedSpeedRanges={selectedSpeedRanges}
               selectedStabilityCategories={selectedStabilityCategories}
+              selectedManufacturers={selectedManufacturers}
               onSpeedRangeClick={handleSpeedRangeClick}
               onStabilityCategoryClick={handleStabilityCategoryClick}
+              onManufacturerClick={handleManufacturerClick}
             />
           </div>
         )}
