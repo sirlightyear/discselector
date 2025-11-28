@@ -90,6 +90,7 @@ export const MANUFACTURERS = [
   "Latitude 64",
   "Legacy Discs",
   "Lone Star Disc",
+  "Løft",
   "MVP Disc Sports",
   "Millennium",
   "Millennium Golf",
