@@ -176,8 +176,11 @@ export function CoursesPage() {
             <h2 className="text-xl font-semibold text-slate-800 mb-2">
               Ingen baner endnu
             </h2>
-            <p className="text-slate-600 mb-6">
+            <p className="text-slate-600 mb-4">
               Opret din første bane for at forberede dig til spil
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              Du skal have mindst 1 disc i "Min Samling" for at kunne lave baner
             </p>
             <button
               onClick={() => setShowAddModal(true)}

@@ -15,7 +15,6 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
   const [glide, setGlide] = useState<number | ''>('');
   const [turn, setTurn] = useState<number | ''>('');
   const [fade, setFade] = useState<number | ''>('');
-  const [throwType, setThrowType] = useState<'forhånd' | 'baghånd' | 'begge'>('begge');
   const [note, setNote] = useState('');
   const [weight, setWeight] = useState<number | ''>('');
   const [isGlow, setIsGlow] = useState(false);
@@ -73,7 +72,7 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         glide: Number(glide),
         turn: Number(turn),
         fade: Number(fade),
-        throw_type: throwType,
+        throw_type: null,
         note: note.trim() || null,
         weight: weight === '' ? null : Number(weight),
         is_glow: isGlow,
@@ -189,13 +188,23 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 Speed
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={speed}
-                onChange={(e) => setSpeed(e.target.value === '' ? '' : Number(e.target.value))}
-                min={1}
-                max={14}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                    setSpeed(val === '' ? '' : val);
+                  }
+                }}
+                onBlur={(e) => {
+                  const num = parseFloat(e.target.value);
+                  if (!isNaN(num)) {
+                    setSpeed(Math.min(14, Math.max(1, num)));
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="f.eks. 9"
+                placeholder="1-14"
                 disabled={isSubmitting}
               />
             </div>
@@ -204,13 +213,23 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 Glide
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={glide}
-                onChange={(e) => setGlide(e.target.value === '' ? '' : Number(e.target.value))}
-                min={1}
-                max={7}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                    setGlide(val === '' ? '' : val);
+                  }
+                }}
+                onBlur={(e) => {
+                  const num = parseFloat(e.target.value);
+                  if (!isNaN(num)) {
+                    setGlide(Math.min(7, Math.max(1, num)));
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="f.eks. 5"
+                placeholder="1-7"
                 disabled={isSubmitting}
               />
             </div>
@@ -219,14 +238,23 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 Turn
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={turn}
-                onChange={(e) => setTurn(e.target.value === '' ? '' : Number(e.target.value))}
-                min={-5}
-                max={5}
-                step={0.5}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                    setTurn(val === '' ? '' : val);
+                  }
+                }}
+                onBlur={(e) => {
+                  const num = parseFloat(e.target.value);
+                  if (!isNaN(num)) {
+                    setTurn(Math.min(1, Math.max(-5, num)));
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="f.eks. -1"
+                placeholder="+1 til -5"
                 disabled={isSubmitting}
               />
             </div>
@@ -235,62 +263,28 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 Fade
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={fade}
-                onChange={(e) => setFade(e.target.value === '' ? '' : Number(e.target.value))}
-                min={0}
-                max={5}
-                step={0.5}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                    setFade(val === '' ? '' : val);
+                  }
+                }}
+                onBlur={(e) => {
+                  const num = parseFloat(e.target.value);
+                  if (!isNaN(num)) {
+                    setFade(Math.min(5, Math.max(0, num)));
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="f.eks. 3"
+                placeholder="0-5"
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Kastetype *
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setThrowType('forhånd')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'forhånd'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Forhånd
-              </button>
-              <button
-                type="button"
-                onClick={() => setThrowType('baghånd')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'baghånd'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Baghånd
-              </button>
-              <button
-                type="button"
-                onClick={() => setThrowType('begge')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'begge'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Begge
-              </button>
-            </div>
-          </div>
 
           <div className="border-t border-slate-200 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -320,11 +314,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                   Speed
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalSpeed}
-                  onChange={(e) => setPersonalSpeed(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={1}
-                  max={14}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalSpeed(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalSpeed(Math.min(14, Math.max(1, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={speed.toString()}
                   disabled={isSubmitting}
@@ -335,11 +339,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                   Glide
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalGlide}
-                  onChange={(e) => setPersonalGlide(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={1}
-                  max={7}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalGlide(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalGlide(Math.min(7, Math.max(1, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={glide.toString()}
                   disabled={isSubmitting}
@@ -350,12 +364,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                   Turn
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalTurn}
-                  onChange={(e) => setPersonalTurn(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={-5}
-                  max={5}
-                  step={0.5}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                      setPersonalTurn(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalTurn(Math.min(1, Math.max(-5, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={turn.toString()}
                   disabled={isSubmitting}
@@ -366,12 +389,21 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                   Fade
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalFade}
-                  onChange={(e) => setPersonalFade(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={0}
-                  max={5}
-                  step={0.5}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalFade(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalFade(Math.min(5, Math.max(0, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={fade.toString()}
                   disabled={isSubmitting}

@@ -16,7 +16,6 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
   const [glide, setGlide] = useState(disc.glide);
   const [turn, setTurn] = useState(disc.turn);
   const [fade, setFade] = useState(disc.fade);
-  const [throwType, setThrowType] = useState<'forhånd' | 'baghånd' | 'begge'>(disc.throw_type);
   const [note, setNote] = useState(disc.note || '');
   const [weight, setWeight] = useState<number | ''>(disc.weight ?? '');
   const [isGlow, setIsGlow] = useState(disc.is_glow);
@@ -69,7 +68,7 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
         glide,
         turn,
         fade,
-        throw_type: throwType,
+        throw_type: null,
         note: note.trim() || null,
         weight: weight === '' ? null : Number(weight),
         is_glow: isGlow,
@@ -240,49 +239,6 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Kastetype *
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setThrowType('forhånd')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'forhånd'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Forhånd
-              </button>
-              <button
-                type="button"
-                onClick={() => setThrowType('baghånd')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'baghånd'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Baghånd
-              </button>
-              <button
-                type="button"
-                onClick={() => setThrowType('begge')}
-                className={`py-2 px-3 rounded-lg font-medium transition-all ${
-                  throwType === 'begge'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-                disabled={isSubmitting}
-              >
-                Begge
-              </button>
-            </div>
-          </div>
 
           <div className="border-t border-slate-200 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -312,11 +268,21 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
                   Speed
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalSpeed}
-                  onChange={(e) => setPersonalSpeed(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={1}
-                  max={14}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalSpeed(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalSpeed(Math.min(14, Math.max(1, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={speed.toString()}
                   disabled={isSubmitting}
@@ -327,11 +293,21 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
                   Glide
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalGlide}
-                  onChange={(e) => setPersonalGlide(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={1}
-                  max={7}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalGlide(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalGlide(Math.min(7, Math.max(1, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={glide.toString()}
                   disabled={isSubmitting}
@@ -342,12 +318,21 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
                   Turn
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalTurn}
-                  onChange={(e) => setPersonalTurn(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={-5}
-                  max={5}
-                  step={0.5}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
+                      setPersonalTurn(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalTurn(Math.min(1, Math.max(-5, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={turn.toString()}
                   disabled={isSubmitting}
@@ -358,12 +343,21 @@ export function EditDiscModal({ disc, onClose, onUpdate }: EditDiscModalProps) {
                   Fade
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={personalFade}
-                  onChange={(e) => setPersonalFade(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={0}
-                  max={5}
-                  step={0.5}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setPersonalFade(val === '' ? '' : val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value);
+                    if (!isNaN(num)) {
+                      setPersonalFade(Math.min(5, Math.max(0, num)));
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
                   placeholder={fade.toString()}
                   disabled={isSubmitting}
