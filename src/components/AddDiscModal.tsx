@@ -330,101 +330,65 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Speed
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
+              <select
                 value={speed}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setSpeed(val === '' ? '' : val);
-                  }
-                }}
-                onBlur={(e) => {
-                  const num = parseFloat(e.target.value);
-                  if (!isNaN(num)) {
-                    setSpeed(Math.min(14, Math.max(1, num)));
-                  }
-                }}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="1-14"
+                onChange={(e) => setSpeed(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
                 disabled={isSubmitting}
-              />
+              >
+                <option value="">Vælg</option>
+                {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Glide
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
+              <select
                 value={glide}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setGlide(val === '' ? '' : val);
-                  }
-                }}
-                onBlur={(e) => {
-                  const num = parseFloat(e.target.value);
-                  if (!isNaN(num)) {
-                    setGlide(Math.min(7, Math.max(1, num)));
-                  }
-                }}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="1-7"
+                onChange={(e) => setGlide(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
                 disabled={isSubmitting}
-              />
+              >
+                <option value="">Vælg</option>
+                {Array.from({ length: 7 }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Turn
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
+              <select
                 value={turn}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
-                    setTurn(val === '' ? '' : val);
-                  }
-                }}
-                onBlur={(e) => {
-                  const num = parseFloat(e.target.value);
-                  if (!isNaN(num)) {
-                    setTurn(Math.min(1, Math.max(-5, num)));
-                  }
-                }}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="+1 til -5"
+                onChange={(e) => setTurn(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
                 disabled={isSubmitting}
-              />
+              >
+                <option value="">Vælg</option>
+                {[1, 0.5, 0, -0.5, -1, -1.5, -2, -2.5, -3, -3.5, -4, -4.5, -5].map(num => (
+                  <option key={num} value={num}>{num > 0 ? `+${num}` : num}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Fade
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
+              <select
                 value={fade}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setFade(val === '' ? '' : val);
-                  }
-                }}
-                onBlur={(e) => {
-                  const num = parseFloat(e.target.value);
-                  if (!isNaN(num)) {
-                    setFade(Math.min(5, Math.max(0, num)));
-                  }
-                }}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                placeholder="0-5"
+                onChange={(e) => setFade(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none bg-white"
                 disabled={isSubmitting}
-              />
+              >
+                <option value="">Vælg</option>
+                {[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -456,101 +420,65 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Speed
                 </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <select
                   value={personalSpeed}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setPersonalSpeed(val === '' ? '' : val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const num = parseFloat(e.target.value);
-                    if (!isNaN(num)) {
-                      setPersonalSpeed(Math.min(14, Math.max(1, num)));
-                    }
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
-                  placeholder={speed.toString()}
+                  onChange={(e) => setPersonalSpeed(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none bg-white"
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="">Brug officiel</option>
+                  {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Glide
                 </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <select
                   value={personalGlide}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setPersonalGlide(val === '' ? '' : val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const num = parseFloat(e.target.value);
-                    if (!isNaN(num)) {
-                      setPersonalGlide(Math.min(7, Math.max(1, num)));
-                    }
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
-                  placeholder={glide.toString()}
+                  onChange={(e) => setPersonalGlide(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none bg-white"
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="">Brug officiel</option>
+                  {Array.from({ length: 7 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Turn
                 </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <select
                   value={personalTurn}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || val === '-' || /^-?\d*\.?\d*$/.test(val)) {
-                      setPersonalTurn(val === '' ? '' : val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const num = parseFloat(e.target.value);
-                    if (!isNaN(num)) {
-                      setPersonalTurn(Math.min(1, Math.max(-5, num)));
-                    }
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
-                  placeholder={turn.toString()}
+                  onChange={(e) => setPersonalTurn(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none bg-white"
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="">Brug officiel</option>
+                  {[1, 0.5, 0, -0.5, -1, -1.5, -2, -2.5, -3, -3.5, -4, -4.5, -5].map(num => (
+                    <option key={num} value={num}>{num > 0 ? `+${num}` : num}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Fade
                 </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <select
                   value={personalFade}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setPersonalFade(val === '' ? '' : val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const num = parseFloat(e.target.value);
-                    if (!isNaN(num)) {
-                      setPersonalFade(Math.min(5, Math.max(0, num)));
-                    }
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none"
-                  placeholder={fade.toString()}
+                  onChange={(e) => setPersonalFade(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600 focus:ring-opacity-20 outline-none bg-white"
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="">Brug officiel</option>
+                  {[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
