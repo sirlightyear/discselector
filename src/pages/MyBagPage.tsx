@@ -52,7 +52,11 @@ export function MyBagPage() {
 
       if (error) {
         console.error('Supabase error:', error);
-        throw error;
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw new Error(`Supabase: ${error.message} (code: ${error.code})${error.hint ? ' - ' + error.hint : ''}`);
       }
       console.log('Disc inserted successfully:', data);
       await loadDiscs();

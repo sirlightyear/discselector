@@ -150,7 +150,15 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
       });
     } catch (err) {
       console.error('Full error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Ukendt fejl';
+      console.error('Error type:', typeof err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
+
+      let errorMessage = 'Ukendt fejl';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object') {
+        errorMessage = JSON.stringify(err);
+      }
       setError(`Kunne ikke tilføje disc: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
