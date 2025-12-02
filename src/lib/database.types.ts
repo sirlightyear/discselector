@@ -27,7 +27,7 @@ export interface Database {
           glide: number;
           turn: number;
           fade: number;
-          throw_type: 'forh�nd' | 'bagh�nd' | 'begge';
+          throw_type: 'forh�nd' | 'bagh�nd' | 'begge' | null;
           note: string | null;
           created_at: string | null;
           weight: number | null;
@@ -53,7 +53,7 @@ export interface Database {
           glide: number;
           turn: number;
           fade: number;
-          throw_type: 'forh�nd' | 'bagh�nd' | 'begge';
+          throw_type: 'forh�nd' | 'bagh�nd' | 'begge' | null;
           note?: string | null;
           created_at?: string | null;
           weight?: number | null;
