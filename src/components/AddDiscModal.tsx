@@ -78,10 +78,10 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
     setName(disc.name);
     setManufacturer(disc.manufacturer);
     if (disc.disc_type) setDiscType(disc.disc_type as any);
-    if (disc.speed !== null) setSpeed(disc.speed);
-    if (disc.glide !== null) setGlide(disc.glide);
-    if (disc.turn !== null) setTurn(disc.turn);
-    if (disc.fade !== null) setFade(disc.fade);
+    if (disc.speed !== null) setSpeed(Number(disc.speed));
+    if (disc.glide !== null) setGlide(Number(disc.glide));
+    if (disc.turn !== null) setTurn(Number(disc.turn));
+    if (disc.fade !== null) setFade(Number(disc.fade));
     setShowLibrary(false);
     setLibrarySearch('');
   };
@@ -574,7 +574,6 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
