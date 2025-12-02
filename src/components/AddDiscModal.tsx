@@ -149,8 +149,9 @@ export function AddDiscModal({ onClose, onAdd }: AddDiscModalProps) {
         photo_url: photoUrl,
       });
     } catch (err) {
-      setError('Kunne ikke tilføje disc. Prøv igen.');
-      console.error(err);
+      console.error('Full error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Ukendt fejl';
+      setError(`Kunne ikke tilføje disc: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

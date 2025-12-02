@@ -44,11 +44,17 @@ export function MyBagPage() {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      console.log('Attempting to insert disc:', { ...disc, user_id: user.user_id });
+      const { data, error } = await supabase
         .from('discs')
-        .insert({ ...disc, user_id: user.user_id });
+        .insert({ ...disc, user_id: user.user_id })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      console.log('Disc inserted successfully:', data);
       await loadDiscs();
       setShowAddModal(false);
     } catch (error) {
