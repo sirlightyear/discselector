@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Package } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, TrendingUp } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert } from '../lib/database.types';
 import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
+import { FlightPathModal } from '../components/FlightPathModal';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 export function MyBagPage() {
@@ -13,6 +14,7 @@ export function MyBagPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDisc, setEditingDisc] = useState<Disc | null>(null);
+  const [flightPathDisc, setFlightPathDisc] = useState<Disc | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -96,6 +98,22 @@ export function MyBagPage() {
       await loadDiscs();
     } catch (error) {
       console.error('Error deleting disc:', error);
+    }
+  };
+
+  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
+    if (!flightPathDisc) return;
+
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update({ throw_style: throwStyle, release_angle: releaseAngle })
+        .eq('disc_id', flightPathDisc.disc_id);
+
+      if (error) throw error;
+      await loadDiscs();
+    } catch (error) {
+      console.error('Error saving flight settings:', error);
     }
   };
 
@@ -207,6 +225,13 @@ export function MyBagPage() {
                   </div>
                   <div className="flex gap-2">
                     <button
+                      onClick={() => setFlightPathDisc(disc)}
+                      className="text-slate-600 hover:text-teal-600 transition-colors"
+                      title="Se flight path"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => setEditingDisc(disc)}
                       className="text-slate-600 hover:text-blue-600 transition-colors"
                       title="Rediger"
@@ -280,6 +305,15 @@ export function MyBagPage() {
           disc={editingDisc}
           onClose={() => setEditingDisc(null)}
           onUpdate={handleUpdateDisc}
+        />
+      )}
+
+      {flightPathDisc && (
+        <FlightPathModal
+          disc={flightPathDisc}
+          isLeftHanded={user?.dominant_hand === 'left'}
+          onClose={() => setFlightPathDisc(null)}
+          onSave={handleSaveFlightSettings}
         />
       )}
     </div>

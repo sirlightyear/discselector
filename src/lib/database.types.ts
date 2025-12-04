@@ -45,6 +45,8 @@ export interface Database {
           purchase_year: number | null;
           rim_color: string | null;
           photo_url: string | null;
+          throw_style: string | null;
+          release_angle: string | null;
         };
         Insert: {
           user_id: string;
@@ -71,6 +73,8 @@ export interface Database {
           purchase_year?: number | null;
           rim_color?: string | null;
           photo_url?: string | null;
+          throw_style?: string | null;
+          release_angle?: string | null;
         };
         Update: {
           user_id?: string;
@@ -97,6 +101,8 @@ export interface Database {
           purchase_year?: number | null;
           rim_color?: string | null;
           photo_url?: string | null;
+          throw_style?: string | null;
+          release_angle?: string | null;
         };
       };
       bags: {
