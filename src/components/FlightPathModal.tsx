@@ -11,20 +11,13 @@ interface FlightPathModalProps {
   onSave?: (throwStyle: string, releaseAngle: string) => void;
 }
 
-export function FlightPathModal({ disc, isLeftHanded, onClose, onSave }: FlightPathModalProps) {
+export function FlightPathModal({ disc, isLeftHanded, onClose }: FlightPathModalProps) {
   const [throwStyle, setThrowStyle] = useState<string>(
     disc.throw_style || 'backhand_standard'
   );
   const [releaseAngle, setReleaseAngle] = useState<'anhyzer' | 'flat' | 'hyzer'>(
     (disc.release_angle as 'anhyzer' | 'flat' | 'hyzer') || 'flat'
   );
-
-  const handleSave = () => {
-    if (onSave) {
-      onSave(throwStyle, releaseAngle);
-    }
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -66,22 +59,14 @@ export function FlightPathModal({ disc, isLeftHanded, onClose, onSave }: FlightP
             isLeftHanded={isLeftHanded}
           />
 
-          {onSave && (
-            <div className="flex gap-3 justify-end pt-4 border-t border-slate-200">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                Annuller
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
-              >
-                Gem indstillinger
-              </button>
-            </div>
-          )}
+          <div className="flex gap-3 justify-end pt-4 border-t border-slate-200">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+            >
+              Luk
+            </button>
+          </div>
         </div>
       </div>
     </div>

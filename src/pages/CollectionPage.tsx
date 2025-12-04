@@ -149,22 +149,6 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     }
   };
 
-  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
-    if (!flightPathDisc) return;
-
-    try {
-      const { error } = await supabase
-        .from('discs')
-        .update({ throw_style: throwStyle, release_angle: releaseAngle })
-        .eq('disc_id', flightPathDisc.disc_id);
-
-      if (error) throw error;
-      await loadDiscs();
-    } catch (error) {
-      console.error('Error saving flight settings:', error);
-    }
-  };
-
 
   const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
   const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
@@ -676,7 +660,6 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
           disc={flightPathDisc}
           isLeftHanded={user?.dominant_hand === 'left'}
           onClose={() => setFlightPathDisc(null)}
-          onSave={handleSaveFlightSettings}
         />
       )}
     </div>

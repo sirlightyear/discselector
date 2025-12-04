@@ -101,22 +101,6 @@ export function MyBagPage() {
     }
   };
 
-  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
-    if (!flightPathDisc) return;
-
-    try {
-      const { error } = await supabase
-        .from('discs')
-        .update({ throw_style: throwStyle, release_angle: releaseAngle })
-        .eq('disc_id', flightPathDisc.disc_id);
-
-      if (error) throw error;
-      await loadDiscs();
-    } catch (error) {
-      console.error('Error saving flight settings:', error);
-    }
-  };
-
 
   if (isLoading) {
     return (
@@ -313,7 +297,6 @@ export function MyBagPage() {
           disc={flightPathDisc}
           isLeftHanded={user?.dominant_hand === 'left'}
           onClose={() => setFlightPathDisc(null)}
-          onSave={handleSaveFlightSettings}
         />
       )}
     </div>

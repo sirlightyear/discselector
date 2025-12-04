@@ -985,22 +985,6 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
     }
   };
 
-  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
-    if (!flightPathDisc) return;
-
-    try {
-      const { error } = await supabase
-        .from('discs')
-        .update({ throw_style: throwStyle, release_angle: releaseAngle })
-        .eq('disc_id', flightPathDisc.disc_id);
-
-      if (error) throw error;
-      await loadData();
-    } catch (error) {
-      console.error('Error saving flight settings:', error);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200 flex items-center justify-center">
@@ -1312,7 +1296,6 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
           disc={flightPathDisc}
           isLeftHanded={user?.dominant_hand === 'left'}
           onClose={() => setFlightPathDisc(null)}
-          onSave={handleSaveFlightSettings}
         />
       )}
     </div>
