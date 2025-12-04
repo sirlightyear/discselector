@@ -5,9 +5,11 @@ interface FilterableCoverageChartProps {
   selectedSpeedRanges: string[];
   selectedStabilityCategories: string[];
   selectedManufacturers: string[];
+  selectedGlowFilter: 'all' | 'glow' | 'non-glow';
   onSpeedRangeClick: (range: string) => void;
   onStabilityCategoryClick: (category: string) => void;
   onManufacturerClick: (manufacturer: string) => void;
+  onGlowFilterClick: (filter: 'all' | 'glow' | 'non-glow') => void;
 }
 
 export function FilterableCoverageChart({
@@ -15,9 +17,11 @@ export function FilterableCoverageChart({
   selectedSpeedRanges,
   selectedStabilityCategories,
   selectedManufacturers,
+  selectedGlowFilter,
   onSpeedRangeClick,
   onStabilityCategoryClick,
-  onManufacturerClick
+  onManufacturerClick,
+  onGlowFilterClick
 }: FilterableCoverageChartProps) {
   const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
   const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
@@ -84,6 +88,9 @@ export function FilterableCoverageChart({
       isSelected: selectedManufacturers.includes(name),
       color: 'bg-purple-500'
     }));
+
+  const glowDiscCount = discs.filter(d => d.is_glow).length;
+  const nonGlowDiscCount = discs.length - glowDiscCount;
 
   const maxSpeedCount = Math.max(...speedCounts.map(s => s.count), 1);
   const maxStabilityCount = Math.max(...stabilityCounts.map(s => s.count), 1);
@@ -230,6 +237,67 @@ export function FilterableCoverageChart({
         </div>
         <div className="mt-3 text-xs text-slate-500">
           {selectedManufacturers.length > 0 ? 'Klik igen for at fjerne filter' : 'Klik for at filtrere'}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">
+          Glow Discs
+          {selectedGlowFilter !== 'all' && (
+            <span className="ml-2 text-xs font-normal text-blue-600">
+              (filtreret)
+            </span>
+          )}
+        </h3>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => onGlowFilterClick('all')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              selectedGlowFilter === 'all'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <div className={`text-2xl font-bold ${
+              selectedGlowFilter === 'all' ? 'text-blue-600' : 'text-slate-700'
+            }`}>
+              {discs.length}
+            </div>
+            <div className="text-xs text-slate-600 mt-1">Alle discs</div>
+          </button>
+          <button
+            onClick={() => onGlowFilterClick('glow')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              selectedGlowFilter === 'glow'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <div className={`text-2xl font-bold ${
+              selectedGlowFilter === 'glow' ? 'text-blue-600' : 'text-emerald-600'
+            }`}>
+              {glowDiscCount}
+            </div>
+            <div className="text-xs text-slate-600 mt-1">Glow discs</div>
+          </button>
+          <button
+            onClick={() => onGlowFilterClick('non-glow')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              selectedGlowFilter === 'non-glow'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <div className={`text-2xl font-bold ${
+              selectedGlowFilter === 'non-glow' ? 'text-blue-600' : 'text-slate-600'
+            }`}>
+              {nonGlowDiscCount}
+            </div>
+            <div className="text-xs text-slate-600 mt-1">Ikke glow</div>
+          </button>
+        </div>
+        <div className="mt-3 text-xs text-slate-500">
+          Klik for at filtrere efter glow discs
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { AddDiscModal } from '../components/AddDiscModal';
 import { EditDiscModal } from '../components/EditDiscModal';
 import { ShareButton } from '../components/ShareButton';
 import { FilterableCoverageChart } from '../components/FilterableCoverageChart';
+import { ImageModal } from '../components/ImageModal';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 type DiscWithBags = Disc & { bags: Bag[] };
@@ -29,6 +30,8 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [selectedSpeedRanges, setSelectedSpeedRanges] = useState<string[]>([]);
   const [selectedStabilityCategories, setSelectedStabilityCategories] = useState<string[]>([]);
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
+  const [selectedGlowFilter, setSelectedGlowFilter] = useState<'all' | 'glow' | 'non-glow'>('all');
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -205,6 +208,12 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
       });
     }
 
+    if (selectedGlowFilter === 'glow') {
+      filtered = filtered.filter(disc => disc.is_glow);
+    } else if (selectedGlowFilter === 'non-glow') {
+      filtered = filtered.filter(disc => !disc.is_glow);
+    }
+
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -223,7 +232,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     });
 
     return sorted;
-  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers]);
+  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers, selectedGlowFilter]);
 
   const handleSpeedRangeClick = (range: string) => {
     setSelectedSpeedRanges(prev =>
@@ -247,6 +256,10 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
         ? prev.filter(m => m !== manufacturer)
         : [...prev, manufacturer]
     );
+  };
+
+  const handleGlowFilterClick = (filter: 'all' | 'glow' | 'non-glow') => {
+    setSelectedGlowFilter(filter);
   };
 
   if (isLoading) {
@@ -349,9 +362,11 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
               selectedSpeedRanges={selectedSpeedRanges}
               selectedStabilityCategories={selectedStabilityCategories}
               selectedManufacturers={selectedManufacturers}
+              selectedGlowFilter={selectedGlowFilter}
               onSpeedRangeClick={handleSpeedRangeClick}
               onStabilityCategoryClick={handleStabilityCategoryClick}
               onManufacturerClick={handleManufacturerClick}
+              onGlowFilterClick={handleGlowFilterClick}
             />
           </div>
         )}
@@ -450,7 +465,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                       src={disc.photo_url}
                       alt={disc.name}
                       className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                      onClick={() => window.open(disc.photo_url!, '_blank')}
+                      onClick={() => setSelectedImage({ url: disc.photo_url!, alt: disc.name })}
                     />
                   </div>
                 )}
@@ -613,6 +628,14 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
           disc={editingDisc}
           onClose={() => setEditingDisc(null)}
           onUpdate={handleUpdateDisc}
+        />
+      )}
+
+      {selectedImage && (
+        <ImageModal
+          imageUrl={selectedImage.url}
+          altText={selectedImage.alt}
+          onClose={() => setSelectedImage(null)}
         />
       )}
     </div>
