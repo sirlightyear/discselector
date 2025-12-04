@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List, TrendingUp } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert, Bag, UserSettings } from '../lib/database.types';
@@ -8,6 +8,7 @@ import { EditDiscModal } from '../components/EditDiscModal';
 import { ShareButton } from '../components/ShareButton';
 import { FilterableCoverageChart } from '../components/FilterableCoverageChart';
 import { ImageModal } from '../components/ImageModal';
+import { FlightPathModal } from '../components/FlightPathModal';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 type DiscWithBags = Disc & { bags: Bag[] };
@@ -32,6 +33,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
   const [selectedGlowFilter, setSelectedGlowFilter] = useState<'all' | 'glow' | 'non-glow'>('all');
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  const [flightPathDisc, setFlightPathDisc] = useState<Disc | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -144,6 +146,22 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
       await loadDiscs();
     } catch (error) {
       console.error('Error deleting disc:', error);
+    }
+  };
+
+  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
+    if (!flightPathDisc) return;
+
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update({ throw_style: throwStyle, release_angle: releaseAngle })
+        .eq('disc_id', flightPathDisc.disc_id);
+
+      if (error) throw error;
+      await loadDiscs();
+    } catch (error) {
+      console.error('Error saving flight settings:', error);
     }
   };
 
@@ -434,6 +452,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <button
+                      onClick={() => setFlightPathDisc(disc)}
+                      className="text-slate-400 hover:text-teal-600 transition-colors"
+                      title="Se flight path"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => setEditingDisc(disc)}
                       className="text-slate-400 hover:text-blue-600 transition-colors"
                       title="Rediger"
@@ -525,6 +550,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     )}
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => setFlightPathDisc(disc)}
+                      className="text-slate-600 hover:text-teal-600 transition-colors"
+                      title="Se flight path"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setEditingDisc(disc)}
                       className="text-slate-600 hover:text-blue-600 transition-colors"
@@ -636,6 +668,15 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
           imageUrl={selectedImage.url}
           altText={selectedImage.alt}
           onClose={() => setSelectedImage(null)}
+        />
+      )}
+
+      {flightPathDisc && (
+        <FlightPathModal
+          disc={flightPathDisc}
+          isLeftHanded={user?.dominant_hand === 'left'}
+          onClose={() => setFlightPathDisc(null)}
+          onSave={handleSaveFlightSettings}
         />
       )}
     </div>

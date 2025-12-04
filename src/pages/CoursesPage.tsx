@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft, Link as LinkIcon, Share2, Image as ImageIcon, Settings, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, ChevronRight, ArrowLeft, ChevronLeft, Link as LinkIcon, Share2, Image as ImageIcon, Settings, GripVertical, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Course, CourseInsert, CourseHole, Disc } from '../lib/database.types';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { ShareButton } from '../components/ShareButton';
+import { FlightPathModal } from '../components/FlightPathModal';
 
 type CourseWithHoleCount = Course & { holeCount: number };
 type HoleWithDiscs = CourseHole & { disc_colors: string[] };
@@ -863,8 +864,15 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
   const [availableDiscs, setAvailableDiscs] = useState<Disc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [flightPathDisc, setFlightPathDisc] = useState<Disc | null>(null);
 
   useEffect(() => {
+    setNotes(hole.notes || '');
+    setCustomName(hole.custom_name || '');
+    setPhotos(hole.photo_urls || []);
+    setBackgroundPhoto(hole.background_photo_url || '');
+    setLink1(hole.link1 || '');
+    setLink2(hole.link2 || '');
     loadData();
   }, [hole.hole_id]);
 
@@ -974,6 +982,22 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
       await loadData();
     } catch (error) {
       console.error('Error removing disc:', error);
+    }
+  };
+
+  const handleSaveFlightSettings = async (throwStyle: string, releaseAngle: string) => {
+    if (!flightPathDisc) return;
+
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update({ throw_style: throwStyle, release_angle: releaseAngle })
+        .eq('disc_id', flightPathDisc.disc_id);
+
+      if (error) throw error;
+      await loadData();
+    } catch (error) {
+      console.error('Error saving flight settings:', error);
     }
   };
 
@@ -1200,12 +1224,21 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleRemoveDisc(disc)}
-                      className="text-slate-400 hover:text-red-600 transition-colors flex-shrink-0 mr-3"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2 mr-3">
+                      <button
+                        onClick={() => setFlightPathDisc(disc)}
+                        className="text-slate-400 hover:text-teal-600 transition-colors"
+                        title="Se flight path"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveDisc(disc)}
+                        className="text-slate-400 hover:text-red-600 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1251,12 +1284,21 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleAddDisc(disc)}
-                      className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0 mr-3"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2 mr-3">
+                      <button
+                        onClick={() => setFlightPathDisc(disc)}
+                        className="text-slate-400 hover:text-teal-600 transition-colors"
+                        title="Se flight path"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleAddDisc(disc)}
+                        className="text-slate-400 hover:text-blue-600 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1264,6 +1306,15 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
           </div>
         </div>
       </div>
+
+      {flightPathDisc && (
+        <FlightPathModal
+          disc={flightPathDisc}
+          isLeftHanded={user?.dominant_hand === 'left'}
+          onClose={() => setFlightPathDisc(null)}
+          onSave={handleSaveFlightSettings}
+        />
+      )}
     </div>
   );
 }
