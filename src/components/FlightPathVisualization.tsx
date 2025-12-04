@@ -11,8 +11,8 @@ interface FlightPathVisualizationProps {
 }
 
 interface Point {
-  x: number;
-  y: number;
+  distance: number;
+  lateral: number;
 }
 
 export function FlightPathVisualization({
@@ -28,8 +28,8 @@ export function FlightPathVisualization({
   const width = 800;
   const height = 600;
   const padding = 60;
-  const maxDistance = 80; // meters
-  const maxHeight = 120; // meters
+  const maxDistance = 100;
+  const maxLateral = 40;
 
   // Load existing flight path
   useEffect(() => {
@@ -100,14 +100,12 @@ export function FlightPathVisualization({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Convert pixel coordinates to meters
-    const distanceMeters = ((x - padding) / (width - padding * 2)) * maxDistance;
-    const heightMeters = ((height - padding - y) / (height - padding * 2)) * maxHeight;
+    const lateralMeters = ((x - width / 2) / ((width - padding * 2) / 2)) * maxLateral;
+    const distanceMeters = ((height - padding - y) / (height - padding * 2)) * maxDistance;
 
-    // Ensure values are within bounds
     if (distanceMeters >= 0 && distanceMeters <= maxDistance &&
-        heightMeters >= 0 && heightMeters <= maxHeight) {
-      setPoints([...points, { x: distanceMeters, y: heightMeters }]);
+        lateralMeters >= -maxLateral && lateralMeters <= maxLateral) {
+      setPoints([...points, { distance: distanceMeters, lateral: lateralMeters }]);
     }
   };
 
@@ -115,53 +113,20 @@ export function FlightPathVisualization({
     setPoints(points.filter((_, i) => i !== index));
   };
 
-  // Convert meters to pixels
-  const xScale = (meters: number) => padding + (meters / maxDistance) * (width - padding * 2);
-  const yScale = (meters: number) => height - padding - (meters / maxHeight) * (height - padding * 2);
+  const xScale = (lateral: number) => width / 2 + (lateral / maxLateral) * ((width - padding * 2) / 2);
+  const yScale = (distance: number) => height - padding - (distance / maxDistance) * (height - padding * 2);
 
-  // Create path data
   const pathData = points.length > 0
     ? points.map((p, i) => {
-        const x = xScale(p.x);
-        const y = yScale(p.y);
+        const x = xScale(p.lateral);
+        const y = yScale(p.distance);
         return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
       }).join(' ')
     : '';
 
-  // Generate grid lines
   const gridLines = [];
 
-  // Vertical grid lines (distance)
   for (let i = 0; i <= maxDistance; i += 10) {
-    const x = xScale(i);
-    gridLines.push(
-      <line
-        key={`v-${i}`}
-        x1={x}
-        y1={padding}
-        x2={x}
-        y2={height - padding}
-        stroke="#334155"
-        strokeWidth="1"
-        strokeDasharray="4 4"
-      />
-    );
-    gridLines.push(
-      <text
-        key={`t-x-${i}`}
-        x={x}
-        y={height - padding + 20}
-        fontSize="11"
-        fill="#94a3b8"
-        textAnchor="middle"
-      >
-        {i}m
-      </text>
-    );
-  }
-
-  // Horizontal grid lines (height)
-  for (let i = 0; i <= maxHeight; i += 10) {
     const y = yScale(i);
     gridLines.push(
       <line
@@ -189,13 +154,42 @@ export function FlightPathVisualization({
     );
   }
 
-  // Axes
+  for (let i = -maxLateral; i <= maxLateral; i += 10) {
+    const x = xScale(i);
+    gridLines.push(
+      <line
+        key={`v-${i}`}
+        x1={x}
+        y1={padding}
+        x2={x}
+        y2={height - padding}
+        stroke="#334155"
+        strokeWidth="1"
+        strokeDasharray="4 4"
+      />
+    );
+    if (i !== 0) {
+      gridLines.push(
+        <text
+          key={`t-x-${i}`}
+          x={x}
+          y={height - padding + 20}
+          fontSize="11"
+          fill="#94a3b8"
+          textAnchor="middle"
+        >
+          {i > 0 ? `+${i}m` : `${i}m`}
+        </text>
+      );
+    }
+  }
+
   gridLines.push(
     <line
-      key="x-axis"
-      x1={padding}
-      y1={height - padding}
-      x2={width - padding}
+      key="center-line"
+      x1={width / 2}
+      y1={padding}
+      x2={width / 2}
       y2={height - padding}
       stroke="#94a3b8"
       strokeWidth="2"
@@ -203,10 +197,10 @@ export function FlightPathVisualization({
   );
   gridLines.push(
     <line
-      key="y-axis"
+      key="start-line"
       x1={padding}
-      y1={padding}
-      x2={padding}
+      y1={height - padding}
+      x2={width - padding}
       y2={height - padding}
       stroke="#94a3b8"
       strokeWidth="2"
@@ -250,7 +244,7 @@ export function FlightPathVisualization({
       </div>
 
       <div className="text-sm text-slate-300 mb-2">
-        Klik på grafen for at tilføje punkter til flight path. Klik på et punkt for at fjerne det.
+        Tegn hvordan discen bevæger sig sideværts mens den flyver fremad. Klik på grafen for at tilføje punkter. Klik på et punkt for at fjerne det.
       </div>
 
       <svg
@@ -274,12 +268,20 @@ export function FlightPathVisualization({
           />
         )}
 
-        {/* Points */}
+        <circle
+          cx={xScale(0)}
+          cy={yScale(0)}
+          r="8"
+          fill="#10b981"
+          stroke="white"
+          strokeWidth="2"
+        />
+
         {points.map((point, index) => (
           <circle
             key={index}
-            cx={xScale(point.x)}
-            cy={yScale(point.y)}
+            cx={xScale(point.lateral)}
+            cy={yScale(point.distance)}
             r="6"
             fill={color}
             stroke="white"
@@ -292,7 +294,6 @@ export function FlightPathVisualization({
           />
         ))}
 
-        {/* Axis labels */}
         <text
           x={width / 2}
           y={height - 5}
@@ -301,7 +302,7 @@ export function FlightPathVisualization({
           textAnchor="middle"
           fontWeight="bold"
         >
-          Distance (m)
+          Lateral bevægelse (m)
         </text>
         <text
           x={20}
@@ -312,7 +313,7 @@ export function FlightPathVisualization({
           fontWeight="bold"
           transform={`rotate(-90 20 ${height / 2})`}
         >
-          Højde (m)
+          Distance (m)
         </text>
       </svg>
 
