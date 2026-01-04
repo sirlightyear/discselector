@@ -261,20 +261,12 @@ export function SharedCollectionPage() {
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all"
               >
                 <div className="p-4 flex items-center gap-4">
-                  {disc.photo_url ? (
-                    <div className="w-20 h-20 flex-shrink-0 bg-slate-100 rounded-lg overflow-hidden">
-                      <img
-                        src={disc.photo_url}
-                        alt={disc.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : disc.color ? (
+                  {disc.color && (
                     <div
                       className="w-12 h-12 rounded-full border-2 border-slate-300 flex-shrink-0"
                       style={{ backgroundColor: disc.color }}
                     />
-                  ) : null}
+                  )}
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

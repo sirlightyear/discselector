@@ -130,20 +130,12 @@ export function SharedBagPage() {
                       key={disc.disc_id}
                       className="flex items-center gap-3 border border-slate-200 rounded-lg p-3"
                     >
-                      {disc.photo_url ? (
-                        <div className="w-16 h-16 flex-shrink-0 bg-slate-100 rounded">
-                          <img
-                            src={disc.photo_url}
-                            alt={disc.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        </div>
-                      ) : disc.color ? (
+                      {disc.color && (
                         <div
                           className="w-8 h-8 rounded-full border-2 border-slate-300 flex-shrink-0"
                           style={{ backgroundColor: disc.color }}
                         />
-                      ) : null}
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold text-slate-800">

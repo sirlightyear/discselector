@@ -466,19 +466,9 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             {filteredAndSortedDiscs.map((disc) => (
               <div
                 key={disc.disc_id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4"
               >
-                {disc.photo_url && (
-                  <div className="w-full h-48 overflow-hidden bg-slate-100">
-                    <img
-                      src={disc.photo_url}
-                      alt={disc.name}
-                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                      onClick={() => setSelectedImage({ url: disc.photo_url!, alt: disc.name })}
-                    />
-                  </div>
-                )}
-                <div className={disc.photo_url ? "p-5" : "p-4"}>
+                <div>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">

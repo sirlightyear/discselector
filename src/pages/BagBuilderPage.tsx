@@ -226,15 +226,6 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                           <ChevronDown className="w-5 h-5" />
                         </button>
                       </div>
-                      {disc.photo_url && (
-                        <div className="w-20 h-20 flex-shrink-0 bg-slate-100">
-                          <img
-                            src={disc.photo_url}
-                            alt={disc.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
                       <div className="flex-1 p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -329,15 +320,6 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                     className="border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden"
                   >
                     <div className="flex items-start">
-                      {disc.photo_url && (
-                        <div className="w-20 h-20 flex-shrink-0 bg-slate-100">
-                          <img
-                            src={disc.photo_url}
-                            alt={disc.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
                       <div className="flex-1 p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
