@@ -478,7 +478,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     />
                   </div>
                 )}
-                <div className="p-5">
+                <div className={disc.photo_url ? "p-5" : "p-4"}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
