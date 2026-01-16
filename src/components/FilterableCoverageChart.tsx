@@ -49,11 +49,9 @@ export function FilterableCoverageChart({
     return turn + fade;
   };
 
-  const activeDiscs = discs.filter(d => !d.is_lost);
-
   const speedCounts = speedRanges.map(range => ({
     ...range,
-    count: activeDiscs.filter(d => {
+    count: discs.filter(d => {
       const speed = getSpeed(d);
       return speed >= range.min && speed <= range.max;
     }).length,
@@ -62,7 +60,7 @@ export function FilterableCoverageChart({
 
   const stabilityCounts = stabilityCategories.map(cat => ({
     ...cat,
-    count: activeDiscs.filter(d => {
+    count: discs.filter(d => {
       const score = getStabilityScore(d);
       if (cat.min === -Infinity) {
         return score < cat.max;
@@ -75,7 +73,7 @@ export function FilterableCoverageChart({
     isSelected: selectedStabilityCategories.includes(cat.label)
   }));
 
-  const manufacturerCounts = activeDiscs
+  const manufacturerCounts = discs
     .reduce((acc, disc) => {
       const mfr = disc.manufacturer || 'Ukendt';
       acc[mfr] = (acc[mfr] || 0) + 1;
@@ -91,8 +89,8 @@ export function FilterableCoverageChart({
       color: 'bg-purple-500'
     }));
 
-  const glowDiscCount = activeDiscs.filter(d => d.is_glow).length;
-  const nonGlowDiscCount = activeDiscs.length - glowDiscCount;
+  const glowDiscCount = discs.filter(d => d.is_glow).length;
+  const nonGlowDiscCount = discs.length - glowDiscCount;
 
   const maxSpeedCount = Math.max(...speedCounts.map(s => s.count), 1);
   const maxStabilityCount = Math.max(...stabilityCounts.map(s => s.count), 1);
@@ -263,7 +261,7 @@ export function FilterableCoverageChart({
             <div className={`text-2xl font-bold ${
               selectedGlowFilter === 'all' ? 'text-blue-600' : 'text-slate-700'
             }`}>
-              {activeDiscs.length}
+              {discs.length}
             </div>
             <div className="text-xs text-slate-600 mt-1">Alle discs</div>
           </button>
