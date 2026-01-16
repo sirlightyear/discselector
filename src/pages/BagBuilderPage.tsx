@@ -49,7 +49,7 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
 
       const bagDiscIdSet = new Set(bagDiscData?.map(bd => bd.disc_id) || []);
       const inBag = bagDiscData?.map(bd => allDiscs?.find(d => d.disc_id === bd.disc_id)).filter(Boolean) as Disc[] || [];
-      const available = allDiscs?.filter(d => !bagDiscIdSet.has(d.disc_id)) || [];
+      const available = allDiscs?.filter(d => !bagDiscIdSet.has(d.disc_id) && !d.is_lost) || [];
 
       setBagDiscs(inBag);
       setAvailableDiscs(available);

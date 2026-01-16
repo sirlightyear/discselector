@@ -47,6 +47,9 @@ export interface Database {
           photo_url: string | null;
           throw_style: string | null;
           release_angle: string | null;
+          is_lost: boolean;
+          lost_date: string | null;
+          lost_location: string | null;
         };
         Insert: {
           user_id: string;
@@ -75,6 +78,9 @@ export interface Database {
           photo_url?: string | null;
           throw_style?: string | null;
           release_angle?: string | null;
+          is_lost?: boolean;
+          lost_date?: string | null;
+          lost_location?: string | null;
         };
         Update: {
           user_id?: string;
@@ -103,6 +109,9 @@ export interface Database {
           photo_url?: string | null;
           throw_style?: string | null;
           release_angle?: string | null;
+          is_lost?: boolean;
+          lost_date?: string | null;
+          lost_location?: string | null;
         };
       };
       bags: {

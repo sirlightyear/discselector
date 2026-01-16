@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, ShoppingBag, Search, Grid3x3, List, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { Disc, DiscInsert, Bag, UserSettings } from '../lib/database.types';
@@ -9,6 +9,7 @@ import { ShareButton } from '../components/ShareButton';
 import { FilterableCoverageChart } from '../components/FilterableCoverageChart';
 import { ImageModal } from '../components/ImageModal';
 import { FlightPathModal } from '../components/FlightPathModal';
+import MarkLostModal from '../components/MarkLostModal';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 
 type DiscWithBags = Disc & { bags: Bag[] };
@@ -34,6 +35,8 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const [selectedGlowFilter, setSelectedGlowFilter] = useState<'all' | 'glow' | 'non-glow'>('all');
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
   const [flightPathDisc, setFlightPathDisc] = useState<Disc | null>(null);
+  const [markingLostDisc, setMarkingLostDisc] = useState<Disc | null>(null);
+  const [lostFilter, setLostFilter] = useState<'active' | 'lost' | 'all'>('active');
 
   useEffect(() => {
     if (user) {
@@ -149,6 +152,47 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     }
   };
 
+  const handleMarkAsLost = async (lostDate: string, lostLocation: string) => {
+    if (!markingLostDisc) return;
+
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update({
+          is_lost: true,
+          lost_date: lostDate,
+          lost_location: lostLocation
+        })
+        .eq('disc_id', markingLostDisc.disc_id);
+
+      if (error) throw error;
+      await loadDiscs();
+      setMarkingLostDisc(null);
+    } catch (error) {
+      console.error('Error marking disc as lost:', error);
+    }
+  };
+
+  const handleMarkAsFound = async (discId: number) => {
+    if (!confirm('Marker denne disc som fundet igen?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('discs')
+        .update({
+          is_lost: false,
+          lost_date: null,
+          lost_location: null
+        })
+        .eq('disc_id', discId);
+
+      if (error) throw error;
+      await loadDiscs();
+    } catch (error) {
+      console.error('Error marking disc as found:', error);
+    }
+  };
+
 
   const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
   const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
@@ -178,9 +222,15 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
   const filteredAndSortedDiscs = useMemo(() => {
     let filtered = discs;
 
+    if (lostFilter === 'active') {
+      filtered = filtered.filter(disc => !disc.is_lost);
+    } else if (lostFilter === 'lost') {
+      filtered = filtered.filter(disc => disc.is_lost);
+    }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = discs.filter(disc =>
+      filtered = filtered.filter(disc =>
         disc.name.toLowerCase().includes(query) ||
         disc.manufacturer?.toLowerCase().includes(query) ||
         disc.plastic?.toLowerCase().includes(query) ||
@@ -234,7 +284,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
     });
 
     return sorted;
-  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers, selectedGlowFilter]);
+  }, [discs, searchQuery, sortBy, selectedSpeedRanges, selectedStabilityCategories, selectedManufacturers, selectedGlowFilter, lostFilter]);
 
   const handleSpeedRangeClick = (range: string) => {
     setSelectedSpeedRanges(prev =>
@@ -281,9 +331,17 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
               <Package className="w-6 h-6 text-blue-600" />
               <div>
                 <h1 className="text-2xl font-bold text-slate-800">Min Samling</h1>
-                <p className="text-sm text-slate-600">
-                  {discs.length} disc{discs.length !== 1 ? 's' : ''}
-                </p>
+                <div className="flex items-center gap-3 text-sm">
+                  <p className="text-slate-600">
+                    {discs.filter(d => !d.is_lost).length} aktiv{discs.filter(d => !d.is_lost).length !== 1 ? 'e' : ''} disc{discs.filter(d => !d.is_lost).length !== 1 ? 's' : ''}
+                  </p>
+                  {discs.filter(d => d.is_lost).length > 0 && (
+                    <p className="text-orange-600 flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {discs.filter(d => d.is_lost).length} mistet
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
@@ -307,17 +365,50 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
           </div>
 
           {discs.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Søg efter navn, producent, plastik..."
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
-                />
+            <>
+              <div className="flex gap-2 pt-4 border-t border-slate-200">
+                <button
+                  onClick={() => setLostFilter('active')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    lostFilter === 'active'
+                      ? 'bg-teal-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Aktive
+                </button>
+                <button
+                  onClick={() => setLostFilter('lost')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    lostFilter === 'lost'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Mistede ({discs.filter(d => d.is_lost).length})
+                </button>
+                <button
+                  onClick={() => setLostFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    lostFilter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Alle
+                </button>
               </div>
+              <div className="flex flex-col sm:flex-row gap-3 pt-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Søg efter navn, producent, plastik..."
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
+                  />
+                </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
@@ -353,6 +444,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                 </button>
               </div>
             </div>
+            </>
           )}
         </div>
 
@@ -412,7 +504,9 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
               {filteredAndSortedDiscs.map((disc) => (
                 <div
                   key={disc.disc_id}
-                  className="p-3 hover:bg-slate-50 transition-colors flex items-center gap-3"
+                  className={`p-3 hover:bg-slate-50 transition-colors flex items-center gap-3 ${
+                    disc.is_lost ? 'opacity-50 bg-slate-50' : ''
+                  }`}
                 >
                   {disc.color && (
                     <div
@@ -421,7 +515,14 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-slate-800 truncate">{disc.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-slate-800 truncate">{disc.name}</div>
+                      {disc.is_lost && (
+                        <span className="text-xs font-medium text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded flex-shrink-0">
+                          Mistet
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 flex-wrap text-xs">
                       {disc.disc_type && (
                         <span className="text-slate-600">{disc.disc_type}</span>
@@ -442,6 +543,23 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     >
                       <TrendingUp className="w-4 h-4" />
                     </button>
+                    {disc.is_lost ? (
+                      <button
+                        onClick={() => handleMarkAsFound(disc.disc_id)}
+                        className="text-slate-400 hover:text-green-600 transition-colors"
+                        title="Marker som fundet"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setMarkingLostDisc(disc)}
+                        className="text-slate-400 hover:text-orange-600 transition-colors"
+                        title="Marker som mistet"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setEditingDisc(disc)}
                       className="text-slate-400 hover:text-blue-600 transition-colors"
@@ -466,9 +584,27 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             {filteredAndSortedDiscs.map((disc) => (
               <div
                 key={disc.disc_id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4"
+                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 ${
+                  disc.is_lost ? 'opacity-50 bg-slate-50' : ''
+                }`}
               >
                 <div>
+                  {disc.is_lost && (
+                    <div className="mb-3 p-2 bg-orange-100 border border-orange-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-orange-800">
+                        <AlertTriangle className="w-4 h-4" />
+                        <div>
+                          <div className="font-semibold">Mistet</div>
+                          {disc.lost_date && (
+                            <div className="text-xs">
+                              {new Date(disc.lost_date).toLocaleDateString('da-DK')}
+                              {disc.lost_location && ` - ${disc.lost_location}`}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -531,6 +667,23 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                     >
                       <TrendingUp className="w-4 h-4" />
                     </button>
+                    {disc.is_lost ? (
+                      <button
+                        onClick={() => handleMarkAsFound(disc.disc_id)}
+                        className="text-slate-600 hover:text-green-600 transition-colors"
+                        title="Marker som fundet"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setMarkingLostDisc(disc)}
+                        className="text-slate-600 hover:text-orange-600 transition-colors"
+                        title="Marker som mistet"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setEditingDisc(disc)}
                       className="text-slate-600 hover:text-blue-600 transition-colors"
@@ -650,6 +803,14 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
           disc={flightPathDisc}
           isLeftHanded={user?.dominant_hand === 'left'}
           onClose={() => setFlightPathDisc(null)}
+        />
+      )}
+
+      {markingLostDisc && (
+        <MarkLostModal
+          disc={markingLostDisc}
+          onClose={() => setMarkingLostDisc(null)}
+          onSave={handleMarkAsLost}
         />
       )}
     </div>
