@@ -22,6 +22,7 @@ function AppContent() {
   const { user, isLoading } = useUser();
   const [currentPage, setCurrentPage] = useState<PageType>('calculator');
   const [favoritePages, setFavoritePages] = useState<PageType[]>([]);
+  const [startupPage, setStartupPage] = useState<PageType>('calculator');
 
   useEffect(() => {
     if (user) {
@@ -41,7 +42,9 @@ function AppContent() {
 
       if (data) {
         if (data.startup_page) {
-          setCurrentPage(data.startup_page as PageType);
+          const page = data.startup_page as PageType;
+          setStartupPage(page);
+          setCurrentPage(page);
         }
         if (Array.isArray(data.favorite_pages)) {
           setFavoritePages(data.favorite_pages as PageType[]);
@@ -50,6 +53,10 @@ function AppContent() {
     } catch (error) {
       console.error('Error loading user settings:', error);
     }
+  };
+
+  const handleNavigateHome = () => {
+    setCurrentPage(startupPage);
   };
 
   if (isLoading) {
@@ -70,7 +77,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200">
-      <Header currentPage={currentPage} />
+      <Header currentPage={currentPage} onNavigateHome={handleNavigateHome} />
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} favoritePages={favoritePages} />
       {currentPage === 'calculator' && <CalculatorPage />}
       {currentPage === 'collection' && <CollectionPage onNavigateToBag={handleNavigateToBag} />}

@@ -4,6 +4,7 @@ import { PageType } from '../App';
 
 interface HeaderProps {
   currentPage?: PageType;
+  onNavigateHome?: () => void;
 }
 
 const PAGE_NAMES: Record<PageType, string> = {
@@ -18,14 +19,17 @@ const PAGE_NAMES: Record<PageType, string> = {
   'bag-builder': 'Bag Builder',
 };
 
-export function Header({ currentPage }: HeaderProps) {
+export function Header({ currentPage, onNavigateHome }: HeaderProps) {
   const { user } = useUser();
 
   return (
     <header className="bg-gradient-to-r from-slate-800 to-slate-700 text-white py-3 px-4 shadow-lg">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={onNavigateHome}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
             <img src="/caddy.png" alt="Disc Caddy" className="w-10 h-10" />
             <h1 className="text-xl md:text-2xl font-bold">
               <span className="hidden md:inline">Disc Caddy</span>
@@ -33,7 +37,7 @@ export function Header({ currentPage }: HeaderProps) {
                 Disc Caddy{currentPage ? ` - ${PAGE_NAMES[currentPage]}` : ''}
               </span>
             </h1>
-          </div>
+          </button>
           {user && (
             <div className="flex items-center gap-2">
               {user.profile_photo_url ? (
