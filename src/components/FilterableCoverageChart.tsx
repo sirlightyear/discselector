@@ -6,6 +6,7 @@ interface FilterableCoverageChartProps {
   selectedStabilityCategories: string[];
   selectedManufacturers: string[];
   selectedGlowFilter: 'all' | 'glow' | 'non-glow';
+  lostFilter?: 'active' | 'lost' | 'all';
   onSpeedRangeClick: (range: string) => void;
   onStabilityCategoryClick: (category: string) => void;
   onManufacturerClick: (manufacturer: string) => void;
@@ -18,6 +19,7 @@ export function FilterableCoverageChart({
   selectedStabilityCategories,
   selectedManufacturers,
   selectedGlowFilter,
+  lostFilter = 'all',
   onSpeedRangeClick,
   onStabilityCategoryClick,
   onManufacturerClick,
@@ -26,6 +28,12 @@ export function FilterableCoverageChart({
   const getSpeed = (disc: Disc) => disc.personal_speed ?? disc.speed;
   const getTurn = (disc: Disc) => disc.personal_turn ?? disc.turn;
   const getFade = (disc: Disc) => disc.personal_fade ?? disc.fade;
+
+  const filteredDiscs = lostFilter === 'active'
+    ? discs.filter(d => !d.is_lost)
+    : lostFilter === 'lost'
+    ? discs.filter(d => d.is_lost)
+    : discs;
 
   const speedRanges = [
     { label: '1-3', min: 1, max: 3, color: 'bg-blue-500' },
@@ -51,7 +59,7 @@ export function FilterableCoverageChart({
 
   const speedCounts = speedRanges.map(range => ({
     ...range,
-    count: discs.filter(d => {
+    count: filteredDiscs.filter(d => {
       const speed = getSpeed(d);
       return speed >= range.min && speed <= range.max;
     }).length,
@@ -60,7 +68,7 @@ export function FilterableCoverageChart({
 
   const stabilityCounts = stabilityCategories.map(cat => ({
     ...cat,
-    count: discs.filter(d => {
+    count: filteredDiscs.filter(d => {
       const score = getStabilityScore(d);
       if (cat.min === -Infinity) {
         return score < cat.max;
@@ -73,7 +81,7 @@ export function FilterableCoverageChart({
     isSelected: selectedStabilityCategories.includes(cat.label)
   }));
 
-  const manufacturerCounts = discs
+  const manufacturerCounts = filteredDiscs
     .reduce((acc, disc) => {
       const mfr = disc.manufacturer || 'Ukendt';
       acc[mfr] = (acc[mfr] || 0) + 1;
@@ -89,8 +97,8 @@ export function FilterableCoverageChart({
       color: 'bg-purple-500'
     }));
 
-  const glowDiscCount = discs.filter(d => d.is_glow).length;
-  const nonGlowDiscCount = discs.length - glowDiscCount;
+  const glowDiscCount = filteredDiscs.filter(d => d.is_glow).length;
+  const nonGlowDiscCount = filteredDiscs.length - glowDiscCount;
 
   const maxSpeedCount = Math.max(...speedCounts.map(s => s.count), 1);
   const maxStabilityCount = Math.max(...stabilityCounts.map(s => s.count), 1);
@@ -261,7 +269,7 @@ export function FilterableCoverageChart({
             <div className={`text-2xl font-bold ${
               selectedGlowFilter === 'all' ? 'text-blue-600' : 'text-slate-700'
             }`}>
-              {discs.length}
+              {filteredDiscs.length}
             </div>
             <div className="text-xs text-slate-600 mt-1">Alle discs</div>
           </button>

@@ -368,7 +368,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
             <>
               <div className="flex gap-2 pt-4 border-t border-slate-200">
                 <button
-                  onClick={() => setLostFilter('active')}
+                  onClick={() => {
+                    setLostFilter('active');
+                    setSelectedSpeedRanges([]);
+                    setSelectedStabilityCategories([]);
+                    setSelectedManufacturers([]);
+                    setSelectedGlowFilter('all');
+                  }}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     lostFilter === 'active'
                       ? 'bg-teal-600 text-white'
@@ -378,7 +384,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                   Aktive
                 </button>
                 <button
-                  onClick={() => setLostFilter('lost')}
+                  onClick={() => {
+                    setLostFilter('lost');
+                    setSelectedSpeedRanges([]);
+                    setSelectedStabilityCategories([]);
+                    setSelectedManufacturers([]);
+                    setSelectedGlowFilter('all');
+                  }}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     lostFilter === 'lost'
                       ? 'bg-orange-600 text-white'
@@ -388,7 +400,13 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
                   Mistede ({discs.filter(d => d.is_lost).length})
                 </button>
                 <button
-                  onClick={() => setLostFilter('all')}
+                  onClick={() => {
+                    setLostFilter('all');
+                    setSelectedSpeedRanges([]);
+                    setSelectedStabilityCategories([]);
+                    setSelectedManufacturers([]);
+                    setSelectedGlowFilter('all');
+                  }}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     lostFilter === 'all'
                       ? 'bg-blue-600 text-white'
@@ -457,6 +475,7 @@ export function CollectionPage({ onNavigateToBag }: CollectionPageProps) {
               selectedStabilityCategories={selectedStabilityCategories}
               selectedManufacturers={selectedManufacturers}
               selectedGlowFilter={selectedGlowFilter}
+              lostFilter={lostFilter}
               onSpeedRangeClick={handleSpeedRangeClick}
               onStabilityCategoryClick={handleStabilityCategoryClick}
               onManufacturerClick={handleManufacturerClick}
