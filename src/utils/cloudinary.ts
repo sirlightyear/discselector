@@ -1,23 +1,24 @@
-const CLOUDINARY_CLOUD_NAME = 'dud5jekku';
-const CLOUDINARY_UPLOAD_PRESET = 'discfotos';
+import { supabase } from '../lib/supabase';
 
 export async function uploadToCloudinary(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+  const filePath = `photos/${fileName}`;
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  const { error: uploadError } = await supabase.storage
+    .from('disc-photos')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to upload image to Cloudinary');
+  if (uploadError) {
+    throw new Error('Failed to upload image: ' + uploadError.message);
   }
 
-  const data = await response.json();
-  return data.secure_url;
+  const { data } = supabase.storage
+    .from('disc-photos')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
 }
