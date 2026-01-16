@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, X, Edit2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, X, Edit2, ChevronUp, ChevronDown, MapPin } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
-import { Disc, Bag, DiscInsert } from '../lib/database.types';
+import { Disc, Bag, DiscInsert, Course } from '../lib/database.types';
 import { BagCoverageChart } from '../components/BagCoverageChart';
 import { getStabilityColor, getStabilityCategory } from '../utils/stability';
 import { EditDiscModal } from '../components/EditDiscModal';
@@ -18,12 +18,77 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
   const [bagDiscs, setBagDiscs] = useState<Disc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingDisc, setEditingDisc] = useState<Disc | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [linkedCourseIds, setLinkedCourseIds] = useState<number[]>([]);
+  const [showCourseSelector, setShowCourseSelector] = useState(false);
 
   useEffect(() => {
     if (user) {
       loadData();
+      loadCourses();
+      loadLinkedCourses();
     }
   }, [user, bag.bag_id]);
+
+  const loadCourses = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .order('name');
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error loading courses:', error);
+    }
+  };
+
+  const loadLinkedCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('course_bags')
+        .select('course_id')
+        .eq('bag_id', bag.bag_id);
+
+      if (error) throw error;
+      setLinkedCourseIds((data || []).map(cb => cb.course_id));
+    } catch (error) {
+      console.error('Error loading linked courses:', error);
+    }
+  };
+
+  const handleToggleCourse = async (courseId: number) => {
+    const isLinked = linkedCourseIds.includes(courseId);
+
+    try {
+      if (isLinked) {
+        const { error } = await supabase
+          .from('course_bags')
+          .delete()
+          .eq('course_id', courseId)
+          .eq('bag_id', bag.bag_id);
+
+        if (error) throw error;
+        setLinkedCourseIds(prev => prev.filter(id => id !== courseId));
+      } else {
+        const { error } = await supabase
+          .from('course_bags')
+          .insert({
+            course_id: courseId,
+            bag_id: bag.bag_id
+          });
+
+        if (error) throw error;
+        setLinkedCourseIds(prev => [...prev, courseId]);
+      }
+    } catch (error) {
+      console.error('Error toggling course:', error);
+    }
+  };
 
   const loadData = async () => {
     if (!user) return;
@@ -174,6 +239,73 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
           <div className="text-sm text-slate-600">
             {bagDiscs.length} discs i baggen
           </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-slate-800">Tilknyttede baner</h2>
+            <button
+              onClick={() => setShowCourseSelector(!showCourseSelector)}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {showCourseSelector ? 'Luk' : 'Vælg baner'}
+            </button>
+          </div>
+
+          {linkedCourseIds.length === 0 && !showCourseSelector ? (
+            <p className="text-sm text-slate-500">
+              Ingen baner tilknyttet. Klik "Vælg baner" for at vælge hvilke baner du bruger denne bag på.
+            </p>
+          ) : (
+            <>
+              {linkedCourseIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {linkedCourseIds.map(courseId => {
+                    const course = courses.find(c => c.course_id === courseId);
+                    return course ? (
+                      <div
+                        key={courseId}
+                        className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-3 py-1.5 rounded-lg text-sm font-medium"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        {course.name}
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+
+              {showCourseSelector && (
+                <div className="space-y-2 pt-3 border-t border-slate-200">
+                  {courses.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      Du har ingen baner endnu. Opret en bane under "Baner" for at kunne tilknytte den til denne bag.
+                    </p>
+                  ) : (
+                    courses.map(course => (
+                      <label
+                        key={course.course_id}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={linkedCourseIds.includes(course.course_id)}
+                          onChange={() => handleToggleCourse(course.course_id)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-slate-800">{course.name}</div>
+                          {course.description && (
+                            <div className="text-xs text-slate-500">{course.description}</div>
+                          )}
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {bagDiscs.length > 0 && (
