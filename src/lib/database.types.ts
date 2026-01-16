@@ -5,16 +5,19 @@ export interface Database {
         Row: {
           user_id: string;
           initialer: string | null;
+          profile_photo_url: string | null;
           created_at: string | null;
         };
         Insert: {
           user_id: string;
           initialer?: string | null;
+          profile_photo_url?: string | null;
           created_at?: string | null;
         };
         Update: {
           user_id?: string;
           initialer?: string | null;
+          profile_photo_url?: string | null;
           created_at?: string | null;
         };
       };
@@ -429,6 +432,9 @@ export interface Database {
   };
 }
 
+export type User = Database['public']['Tables']['users']['Row'];
+export type UserInsert = Database['public']['Tables']['users']['Insert'];
+export type UserUpdate = Database['public']['Tables']['users']['Update'];
 export type Disc = Database['public']['Tables']['discs']['Row'];
 export type DiscInsert = Database['public']['Tables']['discs']['Insert'];
 export type Bag = Database['public']['Tables']['bags']['Row'];

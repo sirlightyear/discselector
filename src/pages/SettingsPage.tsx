@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Moon, Sun, LogOut } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { UserSettings, UserSettingsInsert } from '../lib/database.types';
 import { PageType } from '../App';
+import { PhotoUpload } from '../components/PhotoUpload';
 
 const PAGE_OPTIONS: { value: PageType; label: string }[] = [
   { value: 'calculator', label: 'Beregner' },
@@ -16,12 +17,13 @@ const PAGE_OPTIONS: { value: PageType; label: string }[] = [
 ];
 
 export function SettingsPage() {
-  const { user, logout } = useUser();
+  const { user, logout, setUser } = useUser();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [username, setUsername] = useState('');
   const [initials, setInitials] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [handPreference, setHandPreference] = useState<'R' | 'L' | ''>('');
   const [throwTypePreference, setThrowTypePreference] = useState<'BH' | 'FH' | 'begge' | ''>('');
@@ -42,7 +44,7 @@ export function SettingsPage() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('user_id, initialer')
+        .select('user_id, initialer, profile_photo_url')
         .eq('user_id', user.user_id)
         .single();
 
@@ -51,6 +53,7 @@ export function SettingsPage() {
       if (data) {
         setUsername(data.user_id);
         setInitials(data.initialer || '');
+        setProfilePhotoUrl(data.profile_photo_url || null);
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -92,10 +95,19 @@ export function SettingsPage() {
       setIsSaving(true);
       const { error } = await supabase
         .from('users')
-        .update({ initialer: initials.trim() || null })
+        .update({
+          initialer: initials.trim() || null,
+          profile_photo_url: profilePhotoUrl
+        })
         .eq('user_id', user.user_id);
 
       if (error) throw error;
+
+      setUser({
+        ...user,
+        initialer: initials.trim() || null,
+        profile_photo_url: profilePhotoUrl
+      });
 
       setSaveMessage('Profil gemt!');
       setTimeout(() => setSaveMessage(''), 3000);
@@ -106,6 +118,14 @@ export function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePhotoUpload = (url: string) => {
+    setProfilePhotoUrl(url);
+  };
+
+  const handlePhotoRemove = () => {
+    setProfilePhotoUrl(null);
   };
 
   const handleSaveSettings = async () => {
@@ -179,6 +199,35 @@ export function SettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
+                Profilbillede
+              </label>
+              <div className="flex items-center gap-4">
+                {profilePhotoUrl ? (
+                  <img
+                    src={profilePhotoUrl}
+                    alt="Profilbillede"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-slate-300"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center border-2 border-slate-300">
+                    <UserIcon className="w-10 h-10 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <PhotoUpload
+                    currentPhotoUrl={profilePhotoUrl || undefined}
+                    onPhotoUpload={handlePhotoUpload}
+                    onPhotoRemove={handlePhotoRemove}
+                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    Upload et billede af dig selv. Dette vises i headeren på alle sider.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Brugernavn
               </label>
               <input
@@ -204,6 +253,9 @@ export function SettingsPage() {
                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 outline-none"
                 placeholder="f.eks. JD"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Vises som fallback når der ikke er et profilbillede
+              </p>
             </div>
 
             <button
