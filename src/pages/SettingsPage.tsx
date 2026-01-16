@@ -4,7 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import { UserSettings, UserSettingsInsert } from '../lib/database.types';
 import { PageType } from '../App';
-import { PhotoUpload } from '../components/PhotoUpload';
+import { SinglePhotoUpload } from '../components/SinglePhotoUpload';
 
 const PAGE_OPTIONS: { value: PageType; label: string }[] = [
   { value: 'calculator', label: 'Beregner' },
@@ -214,7 +214,7 @@ export function SettingsPage() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <PhotoUpload
+                  <SinglePhotoUpload
                     currentPhotoUrl={profilePhotoUrl || undefined}
                     onPhotoUpload={handlePhotoUpload}
                     onPhotoRemove={handlePhotoRemove}
