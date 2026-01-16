@@ -59,6 +59,10 @@ function AppContent() {
     setCurrentPage('collection');
   };
 
+  const handleNavigateToSettings = () => {
+    setCurrentPage('settings');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200 flex items-center justify-center">
@@ -77,7 +81,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-200 via-purple-200 to-pink-200">
-      <Header currentPage={currentPage} onNavigateHome={handleNavigateHome} />
+      <Header currentPage={currentPage} onNavigateHome={handleNavigateHome} onNavigateToSettings={handleNavigateToSettings} />
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} favoritePages={favoritePages} />
       {currentPage === 'calculator' && <CalculatorPage />}
       {currentPage === 'collection' && <CollectionPage onNavigateToBag={handleNavigateToBag} />}

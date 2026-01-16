@@ -5,6 +5,7 @@ import { PageType } from '../App';
 interface HeaderProps {
   currentPage?: PageType;
   onNavigateHome?: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 const PAGE_NAMES: Record<PageType, string> = {
@@ -19,7 +20,7 @@ const PAGE_NAMES: Record<PageType, string> = {
   'bag-builder': 'Bag Builder',
 };
 
-export function Header({ currentPage, onNavigateHome }: HeaderProps) {
+export function Header({ currentPage, onNavigateHome, onNavigateToSettings }: HeaderProps) {
   const { user } = useUser();
 
   return (
@@ -39,7 +40,11 @@ export function Header({ currentPage, onNavigateHome }: HeaderProps) {
             </h1>
           </button>
           {user && (
-            <div className="flex items-center gap-2">
+            <button
+              onClick={onNavigateToSettings}
+              className="hover:opacity-80 transition-opacity"
+              title="Gå til indstillinger"
+            >
               {user.profile_photo_url ? (
                 <img
                   src={user.profile_photo_url}
@@ -55,7 +60,7 @@ export function Header({ currentPage, onNavigateHome }: HeaderProps) {
                   <User className="w-5 h-5 text-white" />
                 </div>
               )}
-            </div>
+            </button>
           )}
         </div>
       </div>

@@ -81,17 +81,6 @@ export function Navigation({ currentPage, onNavigate, favoritePages = [] }: Navi
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            {user && (
-              <button
-                onClick={() => handleNavigate('settings')}
-                className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors px-3 py-1 rounded-lg hover:bg-slate-100"
-                title="Gå til indstillinger"
-              >
-                {user.initialer || user.user_id}
-              </button>
-            )}
-          </div>
         </div>
 
         {mobileMenuOpen && (
