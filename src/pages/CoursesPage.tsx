@@ -899,7 +899,7 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
 
       const holeDiscIdSet = new Set(holeDiscIds?.map(hd => hd.disc_id) || []);
       const assigned = allDiscs?.filter(d => holeDiscIdSet.has(d.disc_id)) || [];
-      const available = allDiscs?.filter(d => !holeDiscIdSet.has(d.disc_id)) || [];
+      const available = allDiscs?.filter(d => !holeDiscIdSet.has(d.disc_id) && !d.is_lost) || [];
 
       setHoleDiscs(assigned);
       setAvailableDiscs(available);
@@ -1182,7 +1182,9 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                 {holeDiscs.map((disc) => (
                   <div
                     key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg overflow-hidden"
+                    className={`flex items-center justify-between border border-slate-200 rounded-lg overflow-hidden ${
+                      disc.is_lost ? 'opacity-40 bg-slate-50' : ''
+                    }`}
                   >
                     <div className={`flex items-center flex-1 ${disc.photo_url ? 'gap-3' : disc.color ? 'gap-2' : 'gap-0 pl-3'}`}>
                       {disc.photo_url ? (
@@ -1191,6 +1193,9 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                             src={disc.photo_url}
                             alt={disc.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         </div>
                       ) : disc.color ? (
@@ -1201,7 +1206,10 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                         />
                       ) : null}
                       <div className="flex-1 py-3">
-                        <div className="font-medium text-slate-800">{disc.name}</div>
+                        <div className={`font-medium ${disc.is_lost ? 'text-slate-400' : 'text-slate-800'}`}>
+                          {disc.name}
+                          {disc.is_lost && <span className="ml-2 text-xs font-normal text-red-600">(Mistet)</span>}
+                        </div>
                         <div className="text-xs text-slate-600">
                           {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
                           {disc.disc_type && <span className="ml-2 text-slate-500">• {disc.disc_type}</span>}
@@ -1251,6 +1259,9 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
                             src={disc.photo_url}
                             alt={disc.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         </div>
                       ) : disc.color ? (

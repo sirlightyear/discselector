@@ -197,7 +197,9 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                 {bagDiscs.map((disc, index) => (
                   <div
                     key={disc.disc_id}
-                    className="border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden"
+                    className={`border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden ${
+                      disc.is_lost ? 'opacity-40 bg-slate-50' : ''
+                    }`}
                   >
                     <div className="flex items-start">
                       <div className="flex flex-col gap-2 p-2 border-r border-slate-200">
@@ -236,7 +238,10 @@ export function BagBuilderPage({ bag, onBack }: BagBuilderPageProps) {
                               style={{ backgroundColor: disc.color }}
                             />
                           )}
-                          <h3 className="font-semibold text-slate-800">{disc.name}</h3>
+                          <h3 className={`font-semibold ${disc.is_lost ? 'text-slate-400' : 'text-slate-800'}`}>
+                            {disc.name}
+                            {disc.is_lost && <span className="ml-2 text-xs font-normal text-red-600">(Mistet)</span>}
+                          </h3>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mb-2">
                           {disc.disc_type && (
