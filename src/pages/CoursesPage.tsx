@@ -522,6 +522,7 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
   const [bags, setBags] = useState<Bag[]>([]);
   const [linkedBagIds, setLinkedBagIds] = useState<number[]>([]);
   const [showBagSelector, setShowBagSelector] = useState(false);
+  const [selectedBag, setSelectedBag] = useState<Bag | null>(null);
 
   useEffect(() => {
     loadHoles();
@@ -717,6 +718,10 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
     }
   };
 
+  if (selectedBag) {
+    return <BagBuilderPage bag={selectedBag} onBack={() => setSelectedBag(null)} />;
+  }
+
   if (selectedHole) {
     return (
       <HoleDetailPage
@@ -808,13 +813,15 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
                   {linkedBagIds.map(bagId => {
                     const bag = bags.find(b => b.bag_id === bagId);
                     return bag ? (
-                      <div
+                      <button
                         key={bagId}
-                        className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium"
+                        onClick={() => setSelectedBag(bag)}
+                        className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors cursor-pointer"
+                        title={`Klik for at se ${bag.name}`}
                       >
                         <Briefcase className="w-4 h-4" />
                         {bag.name}
-                      </div>
+                      </button>
                     ) : null;
                   })}
                 </div>

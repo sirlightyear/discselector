@@ -56,7 +56,7 @@ function AppContent() {
   };
 
   const handleNavigateHome = () => {
-    setCurrentPage(startupPage);
+    setCurrentPage('collection');
   };
 
   if (isLoading) {

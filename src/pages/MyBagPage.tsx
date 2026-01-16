@@ -117,14 +117,7 @@ export function MyBagPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Package className="w-6 h-6 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-slate-800">Min Bag</h1>
-                {user?.initialer && (
-                  <p className="text-sm text-slate-600">
-                    {user.initialer} ({user.user_id})
-                  </p>
-                )}
-              </div>
+              <h1 className="text-2xl font-bold text-slate-800">Min Bag</h1>
             </div>
             <button
               onClick={() => setShowAddModal(true)}
