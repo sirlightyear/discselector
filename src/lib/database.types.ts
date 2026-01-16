@@ -428,6 +428,23 @@ export interface Database {
           followed_at?: string | null;
         };
       };
+      course_bags: {
+        Row: {
+          course_id: number;
+          bag_id: number;
+          added_at: string | null;
+        };
+        Insert: {
+          course_id: number;
+          bag_id: number;
+          added_at?: string | null;
+        };
+        Update: {
+          course_id?: number;
+          bag_id?: number;
+          added_at?: string | null;
+        };
+      };
     };
   };
 }

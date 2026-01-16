@@ -519,10 +519,75 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
   const [selectedHole, setSelectedHole] = useState<CourseHole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isManageMode, setIsManageMode] = useState(false);
+  const [bags, setBags] = useState<Bag[]>([]);
+  const [linkedBagIds, setLinkedBagIds] = useState<number[]>([]);
+  const [showBagSelector, setShowBagSelector] = useState(false);
 
   useEffect(() => {
     loadHoles();
+    loadBags();
+    loadLinkedBags();
   }, [course.course_id]);
+
+  const loadBags = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('bags')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .order('name');
+
+      if (error) throw error;
+      setBags(data || []);
+    } catch (error) {
+      console.error('Error loading bags:', error);
+    }
+  };
+
+  const loadLinkedBags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('course_bags')
+        .select('bag_id')
+        .eq('course_id', course.course_id);
+
+      if (error) throw error;
+      setLinkedBagIds((data || []).map(cb => cb.bag_id));
+    } catch (error) {
+      console.error('Error loading linked bags:', error);
+    }
+  };
+
+  const handleToggleBag = async (bagId: number) => {
+    const isLinked = linkedBagIds.includes(bagId);
+
+    try {
+      if (isLinked) {
+        const { error } = await supabase
+          .from('course_bags')
+          .delete()
+          .eq('course_id', course.course_id)
+          .eq('bag_id', bagId);
+
+        if (error) throw error;
+        setLinkedBagIds(prev => prev.filter(id => id !== bagId));
+      } else {
+        const { error } = await supabase
+          .from('course_bags')
+          .insert({
+            course_id: course.course_id,
+            bag_id: bagId
+          });
+
+        if (error) throw error;
+        setLinkedBagIds(prev => [...prev, bagId]);
+      }
+    } catch (error) {
+      console.error('Error toggling bag:', error);
+    }
+  };
 
   const loadHoles = async () => {
     try {
@@ -662,6 +727,8 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
         onBack={() => setSelectedHole(null)}
         onUpdate={loadHoles}
         onSelectHole={setSelectedHole}
+        linkedBagIds={linkedBagIds}
+        bags={bags}
       />
     );
   }
@@ -717,6 +784,73 @@ function CourseDetailPage({ course, onBack }: CourseDetailPageProps) {
               </button>
             )}
           </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-slate-800">Tilknyttede bags</h2>
+            <button
+              onClick={() => setShowBagSelector(!showBagSelector)}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {showBagSelector ? 'Luk' : 'Vælg bags'}
+            </button>
+          </div>
+
+          {linkedBagIds.length === 0 && !showBagSelector ? (
+            <p className="text-sm text-slate-500">
+              Ingen bags tilknyttet. Klik "Vælg bags" for at vælge hvilke bags du bruger på denne bane.
+            </p>
+          ) : (
+            <>
+              {linkedBagIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {linkedBagIds.map(bagId => {
+                    const bag = bags.find(b => b.bag_id === bagId);
+                    return bag ? (
+                      <div
+                        key={bagId}
+                        className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        {bag.name}
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+
+              {showBagSelector && (
+                <div className="space-y-2 pt-3 border-t border-slate-200">
+                  {bags.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      Du har ingen bags endnu. Opret en bag under "Bags" for at kunne tilknytte den til denne bane.
+                    </p>
+                  ) : (
+                    bags.map(bag => (
+                      <label
+                        key={bag.bag_id}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={linkedBagIds.includes(bag.bag_id)}
+                          onChange={() => handleToggleBag(bag.bag_id)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-slate-800">{bag.name}</div>
+                          {bag.description && (
+                            <div className="text-xs text-slate-500">{bag.description}</div>
+                          )}
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {isManageMode ? (
@@ -849,9 +983,11 @@ interface HoleDetailPageProps {
   onBack: () => void;
   onUpdate: () => void;
   onSelectHole: (hole: CourseHole) => void;
+  linkedBagIds: number[];
+  bags: Bag[];
 }
 
-function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate, onSelectHole }: HoleDetailPageProps) {
+function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate, onSelectHole, linkedBagIds, bags }: HoleDetailPageProps) {
   const { user } = useUser();
   const [notes, setNotes] = useState(hole.notes || '');
   const [customName, setCustomName] = useState(hole.custom_name || '');
@@ -865,6 +1001,9 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [flightPathDisc, setFlightPathDisc] = useState<Disc | null>(null);
+  const [bagDiscIds, setBagDiscIds] = useState<Set<number>>(new Set());
+  const [showAddToBagModal, setShowAddToBagModal] = useState(false);
+  const [discToAdd, setDiscToAdd] = useState<Disc | null>(null);
 
   useEffect(() => {
     setNotes(hole.notes || '');
@@ -875,6 +1014,31 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
     setLink2(hole.link2 || '');
     loadData();
   }, [hole.hole_id]);
+
+  useEffect(() => {
+    loadBagDiscs();
+  }, [linkedBagIds]);
+
+  const loadBagDiscs = async () => {
+    if (linkedBagIds.length === 0) {
+      setBagDiscIds(new Set());
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('bag_discs')
+        .select('disc_id')
+        .in('bag_id', linkedBagIds);
+
+      if (error) throw error;
+
+      const discIdSet = new Set((data || []).map(bd => bd.disc_id));
+      setBagDiscIds(discIdSet);
+    } catch (error) {
+      console.error('Error loading bag discs:', error);
+    }
+  };
 
   const loadData = async () => {
     if (!user) return;
@@ -943,6 +1107,16 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
   };
 
   const handleAddDisc = async (disc: Disc) => {
+    if (linkedBagIds.length > 0 && !bagDiscIds.has(disc.disc_id)) {
+      setDiscToAdd(disc);
+      setShowAddToBagModal(true);
+      return;
+    }
+
+    await addDiscToHole(disc);
+  };
+
+  const addDiscToHole = async (disc: Disc) => {
     try {
       const { error } = await supabase
         .from('hole_discs')
@@ -962,6 +1136,47 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
     } catch (error) {
       console.error('Error adding disc:', error);
     }
+  };
+
+  const handleAddDiscToBag = async (bagId: number) => {
+    if (!discToAdd) return;
+
+    try {
+      const { data: bagDiscs, error: fetchError } = await supabase
+        .from('bag_discs')
+        .select('position')
+        .eq('bag_id', bagId)
+        .order('position', { ascending: false })
+        .limit(1);
+
+      if (fetchError) throw fetchError;
+
+      const maxPosition = bagDiscs && bagDiscs.length > 0 ? bagDiscs[0].position : -1;
+
+      const { error } = await supabase
+        .from('bag_discs')
+        .insert({
+          bag_id: bagId,
+          disc_id: discToAdd.disc_id,
+          position: maxPosition + 1
+        });
+
+      if (error) throw error;
+
+      await addDiscToHole(discToAdd);
+      await loadBagDiscs();
+      setShowAddToBagModal(false);
+      setDiscToAdd(null);
+    } catch (error) {
+      console.error('Error adding disc to bag:', error);
+    }
+  };
+
+  const handleSkipAddToBag = async () => {
+    if (!discToAdd) return;
+    await addDiscToHole(discToAdd);
+    setShowAddToBagModal(false);
+    setDiscToAdd(null);
   };
 
   const handleRemoveDisc = async (disc: Disc) => {
@@ -1247,55 +1462,70 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
               </div>
             ) : (
               <div className="space-y-2">
-                {availableDiscs.map((disc) => (
-                  <div
-                    key={disc.disc_id}
-                    className="flex items-center justify-between border border-slate-200 rounded-lg overflow-hidden"
-                  >
-                    <div className={`flex items-center flex-1 ${disc.photo_url ? 'gap-3' : disc.color ? 'gap-2' : 'gap-0 pl-3'}`}>
-                      {disc.photo_url ? (
-                        <div className="w-16 h-16 flex-shrink-0 bg-slate-100">
-                          <img
-                            src={disc.photo_url}
-                            alt={disc.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
+                {availableDiscs.map((disc) => {
+                  const isInBag = bagDiscIds.has(disc.disc_id);
+                  return (
+                    <div
+                      key={disc.disc_id}
+                      className={`flex items-center justify-between rounded-lg overflow-hidden ${
+                        isInBag
+                          ? 'border-2 border-blue-400 bg-blue-50'
+                          : 'border border-slate-200'
+                      }`}
+                    >
+                      <div className={`flex items-center flex-1 ${disc.photo_url ? 'gap-3' : disc.color ? 'gap-2' : 'gap-0 pl-3'}`}>
+                        {disc.photo_url ? (
+                          <div className="w-16 h-16 flex-shrink-0 bg-slate-100">
+                            <img
+                              src={disc.photo_url}
+                              alt={disc.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : disc.color ? (
+                          <div
+                            className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0 ml-2"
+                            style={{ backgroundColor: disc.color }}
+                            title={disc.color}
                           />
-                        </div>
-                      ) : disc.color ? (
-                        <div
-                          className="w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0 ml-2"
-                          style={{ backgroundColor: disc.color }}
-                          title={disc.color}
-                        />
-                      ) : null}
-                      <div className="flex-1 py-3">
-                        <div className="font-medium text-slate-800">{disc.name}</div>
-                        <div className="text-xs text-slate-600">
-                          {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
-                          {disc.disc_type && <span className="ml-2 text-slate-500">• {disc.disc_type}</span>}
+                        ) : null}
+                        <div className="flex-1 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-800">{disc.name}</span>
+                            {isInBag && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700">
+                                <Briefcase className="w-3 h-3" />
+                                I bag
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-600">
+                            {disc.personal_speed ?? disc.speed} | {disc.personal_glide ?? disc.glide} | {disc.personal_turn ?? disc.turn} | {disc.personal_fade ?? disc.fade}
+                            {disc.disc_type && <span className="ml-2 text-slate-500">• {disc.disc_type}</span>}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex gap-2 mr-3">
+                        <button
+                          onClick={() => setFlightPathDisc(disc)}
+                          className="text-slate-400 hover:text-teal-600 transition-colors"
+                          title="Se flight path"
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleAddDisc(disc)}
+                          className="text-slate-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 mr-3">
-                      <button
-                        onClick={() => setFlightPathDisc(disc)}
-                        className="text-slate-400 hover:text-teal-600 transition-colors"
-                        title="Se flight path"
-                      >
-                        <TrendingUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleAddDisc(disc)}
-                        className="text-slate-400 hover:text-blue-600 transition-colors"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1308,6 +1538,69 @@ function HoleDetailPage({ hole, courseName, courseId, allHoles, onBack, onUpdate
           isLeftHanded={user?.dominant_hand === 'left'}
           onClose={() => setFlightPathDisc(null)}
         />
+      )}
+
+      {showAddToBagModal && discToAdd && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="border-b border-slate-200 p-4">
+              <h2 className="text-xl font-bold text-slate-800">
+                Tilføj til bag?
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <p className="text-slate-700 mb-4">
+                <span className="font-semibold">{discToAdd.name}</span> er ikke i nogen af de tilknyttede bags. Vil du tilføje den til en af bags?
+              </p>
+
+              {linkedBagIds.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {linkedBagIds.map(bagId => {
+                    const bag = bags.find(b => b.bag_id === bagId);
+                    return bag ? (
+                      <button
+                        key={bagId}
+                        onClick={() => handleAddDiscToBag(bagId)}
+                        className="w-full text-left px-4 py-3 rounded-lg border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4 text-blue-600" />
+                          <div>
+                            <div className="font-medium text-slate-800">{bag.name}</div>
+                            {bag.description && (
+                              <div className="text-xs text-slate-500">{bag.description}</div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ) : null;
+                  })}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddToBagModal(false);
+                    setDiscToAdd(null);
+                  }}
+                  className="flex-1 bg-slate-200 text-slate-700 py-3 px-4 rounded-lg font-medium hover:bg-slate-300 transition-colors"
+                >
+                  Annuller
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkipAddToBag}
+                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Tilføj uden bag
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
